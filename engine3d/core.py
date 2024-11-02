@@ -12,8 +12,6 @@ class Engine:
         pygame.display.set_mode(self.display, pygame.DOUBLEBUF | pygame.OPENGL)
 
         pygame.display.set_caption("Main Window")
-        icon = pygame.image.load("icon.png")
-        pygame.display.set_icon(icon)
 
         glViewport(0, 0, self.display[0], self.display[1])
         glMatrixMode(GL_PROJECTION)
