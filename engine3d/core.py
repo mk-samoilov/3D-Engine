@@ -27,6 +27,8 @@ class Engine:
         self.camera = Camera((0, 0, 5))
         self.game_objects = []
 
+        pygame.display.set_caption(self.config["window_name"])
+
         glEnable(GL_DEPTH_TEST)
         glViewport(0, 0, self.width, self.height)
         glMatrixMode(GL_PROJECTION)
