@@ -12,6 +12,9 @@ class Engine:
         with open(file=f"{str(config)}", mode="r") as file:
             self.config = json.load(fp=file)
 
+        self.last_mouse = (0, 0, 0)
+        self.mouse_button_pressed = False
+
         pygame.init()
         self.width = self.config["window_width"]
         self.height = self.config["window_height"]
@@ -37,8 +40,20 @@ class Engine:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 3:
+                    self.mouse_button_pressed = True
+                    pygame.mouse.get_rel()
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 3:
+                    self.mouse_button_pressed = False
+            elif event.type == pygame.MOUSEMOTION:
+                if self.mouse_button_pressed:
+                    x_offset, y_offset = pygame.mouse.get_rel()
+                    self.camera.rotate(x_offset, y_offset)
 
         keys = pygame.key.get_pressed()
+
         if keys[pygame.K_w]:
             self.camera.position += self.camera.front * 0.1
         if keys[pygame.K_s]:
