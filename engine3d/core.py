@@ -6,7 +6,6 @@ from OpenGL.GLU import *
 
 from engine3d.camera import Camera
 
-
 class Engine:
     def __init__(self, config: str = "config.json"):
         with open(file=f"{str(config)}", mode="r") as file:
