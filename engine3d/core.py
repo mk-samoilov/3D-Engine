@@ -1,4 +1,4 @@
-import pygame
+import pygame, json
 
 from pygame.math import Vector3
 from OpenGL.GL import *
@@ -6,20 +6,28 @@ from OpenGL.GLU import *
 
 from engine3d.camera import Camera
 
+
 class Engine:
-    def __init__(self, width, height):
+    def __init__(self, config: str = "config.json"):
+        with open(file=f"{str(config)}", mode="r") as file:
+            self.config = json.load(fp=file)
+
         pygame.init()
-        self.width = width
-        self.height = height
-        self.display = pygame.display.set_mode((width, height), pygame.OPENGL | pygame.DOUBLEBUF)
+        self.width = self.config["window_width"]
+        self.height = self.config["window_height"]
+        self.display = pygame.display.set_mode(
+            (
+                self.width,
+                self.height
+            ), pygame.OPENGL | pygame.DOUBLEBUF)
         self.clock = pygame.time.Clock()
         self.camera = Camera((0, 0, 5))
         self.game_objects = []
 
         glEnable(GL_DEPTH_TEST)
-        glViewport(0, 0, width, height)
+        glViewport(0, 0, self.width, self.height)
         glMatrixMode(GL_PROJECTION)
-        gluPerspective(45, (width / height), 0.1, 50.0)
+        gluPerspective(45, (self.width / self.height), 0.1, 50.0)
         glMatrixMode(GL_MODELVIEW)
 
     def add_game_object(self, game_object):

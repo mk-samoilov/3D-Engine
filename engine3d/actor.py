@@ -4,10 +4,10 @@ from pygame.math import Vector3
 from OpenGL.GL import *
 
 class Actor:
-    def __init__(self, position, vertices, faces):
+    def __init__(self, position, mesh):
         self.position = Vector3(position)
-        self.vertices = np.array(vertices, dtype=np.float32)
-        self.faces = np.array(faces, dtype=np.int32)
+        self.vertices = np.array(mesh.vertices, dtype=np.float32)
+        self.faces = np.array(mesh.faces, dtype=np.int32)
 
     def render(self):
         glPushMatrix()
