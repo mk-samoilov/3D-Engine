@@ -29,6 +29,7 @@ class Engine:
         pygame.display.set_caption(self.config["window_name"])
 
         glEnable(GL_DEPTH_TEST)
+        glEnable(GL_TEXTURE_2D)
         glViewport(0, 0, self.width, self.height)
         glMatrixMode(GL_PROJECTION)
         gluPerspective(45, (self.width / self.height), 0.1, 50.0)

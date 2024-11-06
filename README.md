@@ -22,7 +22,11 @@ To use this 3D game engine, you need to have the following dependencies installe
 You can install these dependencies using pip:
 
 ```
-pip install pygame numpy PyOpenGL
+pip install pygame numpy PyOpenGL Pillow
+```
+Or
+```
+pip install -r requirements.txt
 ```
 
 ## Structure
@@ -80,17 +84,20 @@ To use the engine, follow these steps:
 Here's a simple example that loads and displays a cube:
 
 ```python
-from engine3d import Engine, Actor, load_mesh_on_file
+from engine3d import Engine, Actor, load_mesh_on_file, load_texture_on_file
 
-def main():
-    engine = Engine()
-    cube_mesh = load_mesh_on_file("cube.json")
-    cube_actor = Actor(position=(0, 0, -5), mesh=cube_mesh)
-    engine.add_game_object(cube_actor)
-    engine.run()
+game = Engine()
 
-if __name__ == "__main__":
-    main()
+cube_texture = load_texture_on_file(file="engine3d/exemple_textures/blue_texture.png")
+cube_mesh = load_mesh_on_file(file="engine3d/exemple_meshes/cube.json")
+
+cube = Actor(position=(0, 0, 0), mesh=cube_mesh, texture=cube_texture)
+game.add_game_object(cube)
+
+cube = Actor(position=(9, 1, -3.25), mesh=cube_mesh, texture=cube_texture)
+game.add_game_object(cube)
+
+game.run()
 ```
 
 This example initializes the engine, loads a cube mesh, creates an actor with the mesh, adds it to the engine, and starts the game loop.
