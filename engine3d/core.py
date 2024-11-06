@@ -22,6 +22,10 @@ class Engine:
                 self.width,
                 self.height
             ), pygame.OPENGL | pygame.DOUBLEBUF)
+
+        self.window_icon = pygame.image.load(self.config["window_icon"])
+        pygame.display.set_icon(self.window_icon)
+
         self.clock = pygame.time.Clock()
         self.camera = Camera((0, 0, 5))
         self.game_objects = []
