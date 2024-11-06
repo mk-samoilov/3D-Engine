@@ -1,6 +1,10 @@
+import math
+
+from typing import List
 from pygame.math import Vector3
 from OpenGL.GLU import *
-import math
+
+from engine3d.actor import Actor
 
 class Camera:
     def __init__(self, position):
@@ -31,3 +35,24 @@ class Camera:
         front.y = math.sin(math.radians(self.pitch))
         front.z = math.sin(math.radians(self.yaw)) * math.cos(math.radians(self.pitch))
         self.front = front.normalize()
+
+    def move(self, direction, game_objects: List[Actor]):
+        new_position = self.position + direction
+        for obj in game_objects:
+            if obj.check_collision(new_position) and obj.collision:
+                closest_point = self.find_closest_point(new_position, obj)
+                try:
+                    self.position = closest_point + (new_position - closest_point).normalize()
+                except ValueError:
+                    pass
+                finally:
+                    return
+        self.position = new_position
+
+    @staticmethod
+    def find_closest_point(point, obj):
+        min_cords, max_cords = obj.bounding_box
+        closest = Vector3()
+        for i in range(3):
+            closest[i] = max(min_cords[i] + obj.position[i], min(point[i], max_cords[i] + obj.position[i]))
+        return closest

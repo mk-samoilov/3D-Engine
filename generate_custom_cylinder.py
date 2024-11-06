@@ -1,7 +1,7 @@
 import math
 import json
 
-def generate_cylinder(radius=1.0, height=2.0, segments=32):
+def generate_cylinder(radius=1.0, height=2.0, segments=32, collision=False):
     vertices = []
     faces = []
     uvs = []
@@ -44,6 +44,7 @@ def generate_cylinder(radius=1.0, height=2.0, segments=32):
         uvs.append([[u_current, 1], [u_next, 0], [u_next, 1]])
 
     cylinder_data = {
+        "collision": collision,
         "vertices": vertices,
         "faces": faces,
         "uvs": uvs
@@ -54,4 +55,4 @@ def generate_cylinder(radius=1.0, height=2.0, segments=32):
 
     return cylinder_data
 
-cylinder = generate_cylinder(radius=1.1, height=2.5, segments=64)
+cylinder = generate_cylinder(radius=1.1, height=2.5, segments=64, collision=True)

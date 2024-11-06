@@ -61,13 +61,13 @@ class Engine:
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_w]:
-            self.camera.position += self.camera.front * 0.1
+            self.camera.move(self.camera.front * 0.1, self.game_objects)
         if keys[pygame.K_s]:
-            self.camera.position -= self.camera.front * 0.1
+            self.camera.move(-self.camera.front * 0.1, self.game_objects)
         if keys[pygame.K_a]:
-            self.camera.position -= Vector3.cross(self.camera.front, self.camera.up).normalize() * 0.1
+            self.camera.move(-Vector3.cross(self.camera.front, self.camera.up).normalize() * 0.1, self.game_objects)
         if keys[pygame.K_d]:
-            self.camera.position += Vector3.cross(self.camera.front, self.camera.up).normalize() * 0.1
+            self.camera.move(Vector3.cross(self.camera.front, self.camera.up).normalize() * 0.1, self.game_objects)
 
         return True
 
