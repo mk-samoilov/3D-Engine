@@ -26,8 +26,10 @@ class Engine:
         self.window_icon = pygame.image.load(self.config["window_icon"])
         pygame.display.set_icon(self.window_icon)
 
+        self.custom_update_functions = []
+
         self.clock = pygame.time.Clock()
-        self.camera = Camera((0, 0, 5))
+        self.camera = Camera((0, 0, 5), collision=True)
         self.game_objects = []
 
         pygame.display.set_caption(self.config["window_name"])
@@ -71,6 +73,12 @@ class Engine:
 
         return True
 
+    def connect_update_function(self, func):
+        self.custom_update_functions.append(func)
+
+    def disconnect_update_function(self, func):
+        self.custom_update_functions.remove(func)
+
     def update(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
@@ -78,6 +86,9 @@ class Engine:
 
         for game_object in self.game_objects:
             game_object.render()
+
+        for func in self.custom_update_functions:
+            func()
 
         pygame.display.flip()
         self.clock.tick(60)

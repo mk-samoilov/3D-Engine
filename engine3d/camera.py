@@ -1,18 +1,19 @@
 import math
 
-from typing import List
+from typing import List, Tuple
 from pygame.math import Vector3
 from OpenGL.GLU import *
 
 from engine3d.actor import Actor
 
 class Camera:
-    def __init__(self, position):
+    def __init__(self, position: Tuple, collision: bool):
         self.position = Vector3(position)
         self.front = Vector3(0, 0, -1)
         self.up = Vector3(0, 1, 0)
         self.yaw = -90
         self.pitch = 0
+        self.collision = collision
 
     def update(self):
         gluLookAt(
@@ -39,7 +40,7 @@ class Camera:
     def move(self, direction, game_objects: List[Actor]):
         new_position = self.position + direction
         for obj in game_objects:
-            if obj.check_collision(new_position) and obj.collision:
+            if obj.check_collision(new_position) and obj.collision and self.collision:
                 closest_point = self.find_closest_point(new_position, obj)
                 try:
                     self.position = closest_point + (new_position - closest_point).normalize()
