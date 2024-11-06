@@ -9,10 +9,7 @@ def load_mesh_on_file(file: str):
     with open(file=f"{str(file)}", mode="r") as file:
         mesh_data = json.load(fp=file)
         mesh = Mesh(
-            vertices=mesh_data["vertices"],
-            faces=mesh_data["faces"],
-            uvs=mesh_data["uvs"],
-            collision=mesh_data["collision"]
+            vertices=mesh_data["vertices"], faces=mesh_data["faces"], uvs=mesh_data["uvs"]
         )
 
     return mesh

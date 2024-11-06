@@ -4,14 +4,14 @@ from pygame.math import Vector3
 from OpenGL.GL import *
 
 class Actor:
-    def __init__(self, position, mesh, texture):
+    def __init__(self, position, mesh, texture, collision: bool):
         self.position = Vector3(position)
         self.vertices = np.array(mesh.vertices, dtype=np.float32)
         self.faces = np.array(mesh.faces, dtype=np.int32)
         self.uvs = np.array(mesh.uvs, dtype=np.float32)
         self.texture = texture
         self.bounding_box = self.calculate_bounding_box()
-        self.collision = mesh.collision
+        self.collision = collision
 
     def render(self):
         glPushMatrix()
