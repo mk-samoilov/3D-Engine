@@ -49,7 +49,7 @@ def generate_cylinder(radius=1.0, height=2.0, segments=32):
         "uvs": uvs
     }
 
-    with open("engine3d/exemple_meshes/cylinder.json", "w") as f:
+    with open("cylinder.json", "w") as f:
         json.dump(cylinder_data, f, indent=2)
 
     return cylinder_data
