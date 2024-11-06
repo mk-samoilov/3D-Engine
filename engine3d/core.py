@@ -12,7 +12,7 @@ class Engine:
             self.config = json.load(fp=file)
 
         self.last_mouse = (0, 0, 0)
-        self.mouse_button_pressed = False
+        self.unlocked_rotation_camera = False
 
         pygame.init()
         self.width = self.config["window_width"]
@@ -48,13 +48,13 @@ class Engine:
                 return False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 3:
-                    self.mouse_button_pressed = True
+                    self.unlocked_rotation_camera = True
                     pygame.mouse.get_rel()
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 3:
-                    self.mouse_button_pressed = False
+                    self.unlocked_rotation_camera = False
             elif event.type == pygame.MOUSEMOTION:
-                if self.mouse_button_pressed:
+                if self.unlocked_rotation_camera:
                     x_offset, y_offset = pygame.mouse.get_rel()
                     self.camera.rotate(x_offset, y_offset)
 
