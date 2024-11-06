@@ -1,14 +1,27 @@
 # 3D Game Engine Library
 
-This is a simple 3D game engine built with Python, Pygame, and OpenGL. It provides a basic framework for creating 3D games and applications.
+<img src="./engine3d/engine-icon.png" width="150">
+
+#### This is a simple 3D game engine built with Python, Pygame, and OpenGL. It provides a basic framework for creating 3D games and applications.
 
 ## Table of Contents
 
-1. [Installation](#installation)
-2. [Structure](#structure)
-3. [Main Components](#main-components)
-4. [Usage](#usage)
-5. [Example](#example)
+1. [Features](#features)
+2. [Installation](#installation)
+3. [Structure](#structure)
+4. [Main Components](#main-components)
+5. [Usage](#usage)
+6. [Example](#example)
+
+## Features
+
+- 3D rendering with OpenGL
+- Camera system with collision detection
+- Actor/GameObject system
+- Mesh loading from JSON files
+- Texture mapping support
+- Basic collision detection
+- Event handling system
 
 ## Installation
 
@@ -18,6 +31,7 @@ To use this 3D game engine, you need to have the following dependencies installe
 - Pygame
 - NumPy
 - PyOpenGL
+- Pillow
 
 You can install these dependencies using pip:
 
@@ -37,8 +51,7 @@ The engine is organized into several modules:
 - `camera.py`: Implements the `Camera` class for 3D navigation.
 - `actor.py`: Defines the `Actor` class for game objects.
 - `mesh.py`: Contains the `Mesh` class for storing 3D model data.
-- `dt.py`: Implements a `DataTable` class for storing additional data.
-- `methods.py`: Provides utility functions like `load_mesh_on_file`.
+- `methods.py`: Contains function `load_mesh_on_file` and `load_texture_on_file`.
 
 ## Main Components
 
@@ -81,21 +94,24 @@ To use the engine, follow these steps:
 
 ## Example
 
-Here's a simple example that loads and displays a cube:
+Here's a simple example that loads and displays a cube and cylinder:
 
 ```python
 from engine3d import Engine, Actor, load_mesh_on_file, load_texture_on_file
 
 game = Engine()
 
-cube_texture = load_texture_on_file(file="engine3d/exemple_textures/blue_texture.png")
+blue_texture = load_texture_on_file(file="engine3d/exemple_textures/blue_texture.png")
+# Don't forget to look at engine3d/exemple_textures/test.png)))
+
 cube_mesh = load_mesh_on_file(file="engine3d/exemple_meshes/cube.json")
+cylinder_mesh = load_mesh_on_file(file="engine3d/exemple_meshes/cylinder.json")
 
-cube = Actor(position=(0, 0, 0), mesh=cube_mesh, texture=cube_texture)
+cube = Actor(position=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision=True)
 game.add_game_object(cube)
 
-cube = Actor(position=(9, 1, -3.25), mesh=cube_mesh, texture=cube_texture)
-game.add_game_object(cube)
+cylinder = Actor(position=(9, 1, -3.25), mesh=cylinder_mesh, texture=blue_texture, collision=True)
+game.add_game_object(cylinder)
 
 game.run()
 ```
