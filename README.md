@@ -5,6 +5,8 @@
 #### This is a simple 3D game engine built with Python, Pygame, and OpenGL. It provides a basic framework for creating 3D games and applications.
 #### Exemple game builds on this engine: https://disk.yandex.ru/d/ONQAN8PDgMAMrA
 
+<img src="./screenshot.png" width="670">
+
 ## Table of Contents
 
 1. [Features](#features)
@@ -113,11 +115,11 @@ blue_texture = load_texture_on_file(file="engine3d/exemple_textures/blue_texture
 cube_mesh = load_mesh_on_file(file="engine3d/exemple_meshes/cube.json")
 cylinder_mesh = load_mesh_on_file(file="engine3d/exemple_meshes/cylinder.json")
 
-cube = Actor(position=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision=True)
+cube = Actor(position=(0, 0, 0), rotation=(56, 71, 62), mesh=cube_mesh, texture=blue_texture, collision=True)
 game.add_game_object(cube)
 
 radius = 6 # Distance from the cube
-cylinder = Actor(position=(radius, 0, 0), mesh=cylinder_mesh, texture=blue_texture, collision=True)
+cylinder = Actor(position=(radius, 0, 0), rotation=(0, 0, 0), mesh=cylinder_mesh, texture=blue_texture, collision=True)
 game.add_game_object(cylinder)
 
 angle = 0
