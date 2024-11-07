@@ -14,7 +14,6 @@ def load_mesh_on_file(file: str):
 
     return mesh
 
-
 def load_texture_on_file(file: str):
     image = Image.open(file)
     image_data = image.convert("RGBA").tobytes()

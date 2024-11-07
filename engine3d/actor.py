@@ -1,21 +1,32 @@
-import numpy as np
+import numpy
 
 from pygame.math import Vector3
 from OpenGL.GL import *
 
 class Actor:
-    def __init__(self, position, mesh, texture, collision: bool):
+    def __init__(self, position, rotation, mesh, texture, collision: bool, physic: bool = False):
         self.position = Vector3(position)
-        self.vertices = np.array(mesh.vertices, dtype=np.float32)
-        self.faces = np.array(mesh.faces, dtype=np.int32)
-        self.uvs = np.array(mesh.uvs, dtype=np.float32)
+        self.rotation = Vector3(rotation)
+        self.velocity = Vector3(0, 0, 0)
+        self.angular_velocity = Vector3(0, 0, 0)
+
+        self.physic = physic
+
+        self.vertices = numpy.array(mesh.vertices, dtype=numpy.float32)
+        self.faces = numpy.array(mesh.faces, dtype=numpy.int32)
+        self.uvs = numpy.array(mesh.uvs, dtype=numpy.float32)
         self.texture = texture
         self.bounding_box = self.calculate_bounding_box()
         self.collision = collision
 
     def render(self):
         glPushMatrix()
+
         glTranslatef(self.position.x, self.position.y, self.position.z)
+
+        glRotatef(self.rotation[0], 0, 0, 1)
+        glRotatef(self.rotation[1], 0, 1, 0)
+        glRotatef(self.rotation[2], 1, 0, 0)
 
         glBindTexture(GL_TEXTURE_2D, self.texture)
         glEnable(GL_TEXTURE_2D)
@@ -31,8 +42,8 @@ class Actor:
         glPopMatrix()
 
     def calculate_bounding_box(self):
-        min_cords = np.min(self.vertices, axis=0)
-        max_cords = np.max(self.vertices, axis=0)
+        min_cords = numpy.min(self.vertices, axis=0)
+        max_cords = numpy.max(self.vertices, axis=0)
         return min_cords, max_cords
 
     def check_collision(self, point):
