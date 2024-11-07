@@ -98,10 +98,11 @@ Here's a simple example that loads and displays a cube and cylinder:
 
 ```python
 from pygame import Vector3
-from engine3d import Engine, Actor, load_mesh_on_file, load_texture_on_file
+from engine3d import Engine, Actor, Camera, load_mesh_on_file, load_texture_on_file
 import math
 
-game = Engine()
+player = Camera((0, 0, 12), collision=True)
+game = Engine(player=player)
 
 blue_texture = load_texture_on_file(file="engine3d/exemple_textures/blue_texture.png")
 # Don't forget to look at engine3d/exemple_textures/test.png ))))
@@ -113,11 +114,10 @@ cube = Actor(position=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision
 game.add_game_object(cube)
 
 radius = 6  # Distance from the cube
-cylinder = Actor(position=(radius, 1, 0), mesh=cylinder_mesh, texture=blue_texture, collision=True)
+cylinder = Actor(position=(radius, 0, 0), mesh=cylinder_mesh, texture=blue_texture, collision=True)
 game.add_game_object(cylinder)
 
 angle = 0
-
 
 def update():
     global angle
@@ -125,19 +125,19 @@ def update():
 
     new_x = radius * math.cos(angle)
     new_z = radius * math.sin(angle)
-    new_position = Vector3((new_x, 1, new_z))
+    new_position = Vector3((new_x, 0, new_z))
 
     movement = new_position - cylinder.position
     cylinder.position = new_position
 
-    camera_pos = Vector3(game.camera.position)
+    camera_pos = Vector3(game.player.position)
 
     if cylinder.check_collision(camera_pos):
         push_direction = movement.normalize()
-        game.camera.position += push_direction * 0.1
+        game.player.position += push_direction * 0.1
 
 
-game.connect_update_function(func=update)
+game.add_update_function(func=update)
 game.run()
 ```
 

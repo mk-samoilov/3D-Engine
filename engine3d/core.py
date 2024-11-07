@@ -4,10 +4,8 @@ from pygame.math import Vector3
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from engine3d.camera import Camera
-
 class Engine:
-    def __init__(self, config: str = "config.json"):
+    def __init__(self, player, config: str = "config.json"):
         with open(file=f"{str(config)}", mode="r") as file:
             self.config = json.load(fp=file)
 
@@ -29,7 +27,7 @@ class Engine:
         self.custom_update_functions = []
 
         self.clock = pygame.time.Clock()
-        self.camera = Camera((0, 0, 5), collision=True)
+        self.player = player
         self.game_objects = []
 
         pygame.display.set_caption(self.config["window_name"])
@@ -58,31 +56,31 @@ class Engine:
             elif event.type == pygame.MOUSEMOTION:
                 if self.unlocked_rotation_camera:
                     x_offset, y_offset = pygame.mouse.get_rel()
-                    self.camera.rotate(x_offset, y_offset)
+                    self.player.rotate(x_offset, y_offset)
 
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_w]:
-            self.camera.move(self.camera.front * 0.1, self.game_objects)
+            self.player.move(self.player.front * 0.1, self.game_objects)
         if keys[pygame.K_s]:
-            self.camera.move(-self.camera.front * 0.1, self.game_objects)
+            self.player.move(-self.player.front * 0.1, self.game_objects)
         if keys[pygame.K_a]:
-            self.camera.move(-Vector3.cross(self.camera.front, self.camera.up).normalize() * 0.1, self.game_objects)
+            self.player.move(-Vector3.cross(self.player.front, self.player.up).normalize() * 0.1, self.game_objects)
         if keys[pygame.K_d]:
-            self.camera.move(Vector3.cross(self.camera.front, self.camera.up).normalize() * 0.1, self.game_objects)
+            self.player.move(Vector3.cross(self.player.front, self.player.up).normalize() * 0.1, self.game_objects)
 
         return True
 
-    def connect_update_function(self, func):
+    def add_update_function(self, func):
         self.custom_update_functions.append(func)
 
-    def disconnect_update_function(self, func):
+    def remove_update_function(self, func):
         self.custom_update_functions.remove(func)
 
     def update(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
-        self.camera.update()
+        self.player.update()
 
         for game_object in self.game_objects:
             game_object.render()
