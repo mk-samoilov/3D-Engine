@@ -4,6 +4,77 @@ from pygame.math import Vector3
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+class PhysicsEngine:
+    def __init__(self, gravity=Vector3(0, -9.8, 0)):
+        self.gravity = gravity
+        self.objects = []
+
+    def update(self, dt):
+        for obj in self.objects:
+            if obj.physic:
+                obj.apply_force(self.gravity)
+
+            obj.update(dt)
+
+        self.handle_collisions()
+
+    def handle_collisions(self):
+        for i, obj1 in enumerate(self.objects):
+            for obj2 in self.objects[i + 1:]:
+                if obj1.collision and obj2.collision:
+                    if self.check_collision(obj1, obj2):
+                        if obj1.physic:
+                            self.resolve_collision(obj1, obj2)
+                        elif obj2.physic:
+                            self.resolve_collision(obj2, obj1)
+
+    def resolve_collision(self, physics_obj, other_obj):
+        relative_velocity = physics_obj.velocity - (other_obj.velocity if other_obj.physic else Vector3(0, 0, 0))
+        collision_normal = (physics_obj.position - other_obj.position).normalize()
+
+        if relative_velocity.dot(collision_normal) > 0:
+            return
+
+        e = min(physics_obj.restitution, other_obj.restitution)
+        j = -(1 + e) * relative_velocity.dot(collision_normal)
+        j /= physics_obj.inv_mass + (other_obj.inv_mass if other_obj.physic else 0)
+
+        impulse = collision_normal * j
+
+        physics_obj.velocity += impulse * physics_obj.inv_mass
+        if other_obj.physic:
+            other_obj.velocity -= impulse * other_obj.inv_mass
+
+        penetration_depth = self.calculate_penetration_depth(physics_obj, other_obj)
+        percent = 0.8
+        slop = 0.01
+        correction = max(penetration_depth - slop, 0) / (physics_obj.inv_mass + (other_obj.inv_mass if other_obj.physic else 0)) * percent * collision_normal
+
+        physics_obj.position += correction * physics_obj.inv_mass
+        if other_obj.physic:
+            other_obj.position -= correction * other_obj.inv_mass
+
+    @staticmethod
+    def check_collision(obj1, obj2):
+        min1, max1 = obj1.bounding_box
+        min2, max2 = obj2.bounding_box
+        return all(
+            max1[i] + obj1.position[i] >= min2[i] + obj2.position[i] and
+            min1[i] + obj1.position[i] <= max2[i] + obj2.position[i]
+            for i in range(3)
+        )
+
+    @staticmethod
+    def calculate_penetration_depth(obj1, obj2):
+        min1, max1 = obj1.bounding_box
+        min2, max2 = obj2.bounding_box
+        overlap = [
+            min(max1[i] + obj1.position[i], max2[i] + obj2.position[i]) -
+            max(min1[i] + obj1.position[i], min2[i] + obj2.position[i])
+            for i in range(3)
+        ]
+        return min(overlap)
+
 class Engine:
     def __init__(self, player, config: str = "config.json"):
         with open(file=f"{str(config)}", mode="r") as file:
@@ -39,8 +110,16 @@ class Engine:
         gluPerspective(45, (self.width / self.height), 0.1, 50.0)
         glMatrixMode(GL_MODELVIEW)
 
-    def add_game_object(self, game_object):
-        self.game_objects.append(game_object)
+        self.physics_engine = PhysicsEngine()
+
+    def add_game_object(self, obj):
+        self.game_objects.append(obj)
+        self.physics_engine.objects.append(obj)
+
+    def remove_game_object(self, obj):
+        self.game_objects.remove(obj)
+        self.physics_engine.objects.remove(obj)
+
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -81,6 +160,9 @@ class Engine:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
         self.player.update()
+
+        dt = self.clock.get_time() / 1000.0
+        self.physics_engine.update(dt=dt)
 
         for game_object in self.game_objects:
             game_object.render()

@@ -13,12 +13,16 @@ blue_texture = load_texture_on_file(file="engine3d/exemple_textures/blue_texture
 cube_mesh = load_mesh_on_file(file="engine3d/exemple_meshes/cube.json")
 cylinder_mesh = load_mesh_on_file(file="engine3d/exemple_meshes/cylinder.json")
 
-cube = Actor(position=(0, 0, 0), rotation=(56, 71, 62), mesh=cube_mesh, texture=blue_texture, collision=True)
+cube = Actor(position=(0, 0, 0), rotation=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision=True)
 game.add_game_object(cube)
+
+physical_cube = Actor(position=(0, 7, 0), rotation=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision=True, physic=True)
+game.add_game_object(physical_cube)
 
 radius = 6 # Distance from the cube
 cylinder = Actor(position=(radius, 0, 0), rotation=(0, 0, 0), mesh=cylinder_mesh, texture=blue_texture, collision=True)
 game.add_game_object(cylinder)
+cylinder.apply_torque(Vector3(5, 5, 5))
 
 angle = 0
 
@@ -38,7 +42,6 @@ def update():
     if cylinder.check_collision(camera_pos):
         push_direction = movement.normalize()
         game.player.position += push_direction * 0.1
-
 
 game.add_update_function(func=update)
 game.run()
