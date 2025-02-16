@@ -157,7 +157,7 @@ class Engine:
         self.fixed_time_step = 1 / 60
         self.accumulated_time = 0
 
-        self.console_.print("Done initialization.")
+        self.console_.print("Done loading.")
 
     class ConsoleComponent:
         def __init__(self, core_class_instance) -> None:
