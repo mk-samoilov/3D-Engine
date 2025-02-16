@@ -5,16 +5,16 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 class PhysicsEngine:
-    def __init__(self, gravity=Vector3(0, -9.8, 0)):
+    def __init__(self, gravity: Vector3 = Vector3(0, -9.8, 0)): # Vector3(0, -9.8, 0)
         self.gravity = gravity
         self.objects = []
 
-    def update(self, dt):
+    def update(self, dt: float):
         for obj in self.objects:
             if obj.physic:
-                obj.apply_force(self.gravity)
-
-            obj.update(dt)
+                gravitational_force = self.gravity * obj.mass
+                obj.apply_force(gravitational_force)
+            obj.update(dt=float(dt))
 
         self.handle_collisions()
 
@@ -23,36 +23,59 @@ class PhysicsEngine:
             for obj2 in self.objects[i + 1:]:
                 if obj1.collision and obj2.collision:
                     if self.check_collision(obj1, obj2):
-                        if obj1.physic:
-                            self.resolve_collision(obj1, obj2)
-                        elif obj2.physic:
-                            self.resolve_collision(obj2, obj1)
+                        self.resolve_collision(obj1, obj2)
 
-    def resolve_collision(self, physics_obj, other_obj):
-        relative_velocity = physics_obj.velocity - (other_obj.velocity if other_obj.physic else Vector3(0, 0, 0))
-        collision_normal = (physics_obj.position - other_obj.position).normalize()
-
-        if relative_velocity.dot(collision_normal) > 0:
+    def resolve_collision(self, obj1, obj2):
+        if not (obj1.physic or obj2.physic):
             return
 
-        e = min(physics_obj.restitution, other_obj.restitution)
-        j = -(1 + e) * relative_velocity.dot(collision_normal)
-        j /= physics_obj.inv_mass + (other_obj.inv_mass if other_obj.physic else 0)
+        collision_point = self.find_collision_point(obj1, obj2)
+        collision_normal = (obj2.position - obj1.position).normalize()
+
+        rel_velocity = obj2.velocity - obj1.velocity
+        if obj1.physic and obj2.physic:
+            rel_velocity += Vector3.cross(obj2.angular_velocity, collision_point - obj2.position)
+            rel_velocity -= Vector3.cross(obj1.angular_velocity, collision_point - obj1.position)
+
+        rel_normal_velocity = rel_velocity.dot(collision_normal)
+        if rel_normal_velocity > 0:
+            return
+
+        e = min(obj1.restitution, obj2.restitution)
+        j = -(1 + e) * rel_normal_velocity
+        j /= obj1.inv_mass + obj2.inv_mass
 
         impulse = collision_normal * j
 
-        physics_obj.velocity += impulse * physics_obj.inv_mass
-        if other_obj.physic:
-            other_obj.velocity -= impulse * other_obj.inv_mass
+        if obj1.physic:
+            obj1.apply_impulse(-impulse, collision_point - obj1.position)
+        if obj2.physic:
+            obj2.apply_impulse(impulse, collision_point - obj2.position)
 
-        penetration_depth = self.calculate_penetration_depth(physics_obj, other_obj)
+        tangent = rel_velocity - (rel_velocity.dot(collision_normal) * collision_normal)
+        if tangent.magnitude() > 0:
+            tangent = tangent.normalize()
+            friction_impulse = -tangent * j * min(obj1.friction, obj2.friction)
+
+            if obj1.physic:
+                obj1.apply_impulse(-friction_impulse, collision_point - obj1.position)
+            if obj2.physic:
+                obj2.apply_impulse(friction_impulse, collision_point - obj2.position)
+
+        penetration_depth = self.calculate_penetration_depth(obj1, obj2)
         percent = 0.8
         slop = 0.01
-        correction = max(penetration_depth - slop, 0) / (physics_obj.inv_mass + (other_obj.inv_mass if other_obj.physic else 0)) * percent * collision_normal
+        correction = max(penetration_depth - slop, 0) / (obj1.inv_mass + obj2.inv_mass) * percent * collision_normal
 
-        physics_obj.position += correction * physics_obj.inv_mass
-        if other_obj.physic:
-            other_obj.position -= correction * other_obj.inv_mass
+        if obj1.physic:
+            obj1.position -= correction * obj1.inv_mass
+        if obj2.physic:
+            obj2.position += correction * obj2.inv_mass
+
+    @staticmethod
+    def find_collision_point(obj1, obj2):
+        # Simplified collision point calculation (center of overlap)
+        return (obj1.position + obj2.position) * 0.5
 
     @staticmethod
     def check_collision(obj1, obj2):
@@ -110,7 +133,9 @@ class Engine:
         gluPerspective(45, (self.width / self.height), 0.1, 50.0)
         glMatrixMode(GL_MODELVIEW)
 
-        self.physics_engine = PhysicsEngine()
+        self.physics_engine = PhysicsEngine(gravity=Vector3(0, -9.8, 0))
+        self.fixed_time_step = 1 / 60
+        self.accumulated_time = 0
 
     def add_game_object(self, obj):
         self.game_objects.append(obj)
@@ -162,7 +187,11 @@ class Engine:
         self.player.update()
 
         dt = self.clock.get_time() / 1000.0
-        self.physics_engine.update(dt=dt)
+        self.accumulated_time += dt
+
+        while self.accumulated_time >= self.fixed_time_step:
+            self.physics_engine.update(dt=self.fixed_time_step)
+            self.accumulated_time -= self.fixed_time_step
 
         for game_object in self.game_objects:
             game_object.render()

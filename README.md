@@ -3,7 +3,6 @@
 <img src="./engine3d/engine-icon.png" width="150">
 
 #### This is a simple 3D game engine built with Python, Pygame, and OpenGL. It provides a basic framework for creating 3D games and applications.
-#### Exemple game builds on this engine: https://disk.yandex.ru/d/ONQAN8PDgMAMrA
 
 <img src="./screenshot.png" width="670">
 

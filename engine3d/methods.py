@@ -3,7 +3,7 @@ import json
 from PIL import Image
 from OpenGL.GL import *
 
-from engine3d.mesh import Mesh
+from .classes import Mesh
 
 def load_mesh_on_file(file: str):
     with open(file=f"{str(file)}", mode="r") as file:
