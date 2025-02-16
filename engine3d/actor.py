@@ -55,12 +55,12 @@ class Actor:
     def calculate_inertia_tensor(self):
         inertia = np.zeros((3, 3))
         for vertex in self.vertices:
-            x, y, z = vertex
+            x_, y, z = vertex
             inertia[0, 0] += y**2 + z**2
-            inertia[1, 1] += x**2 + z**2
-            inertia[2, 2] += x**2 + y**2
-            inertia[0, 1] -= x * y
-            inertia[0, 2] -= x * z
+            inertia[1, 1] += x_**2 + z**2
+            inertia[2, 2] += x_**2 + y**2
+            inertia[0, 1] -= x_ * y
+            inertia[0, 2] -= x_ * z
             inertia[1, 2] -= y * z
         inertia[1, 0] = inertia[0, 1]
         inertia[2, 0] = inertia[0, 2]
@@ -87,7 +87,7 @@ class Actor:
         # F = ma, a = F/m
 
         dt = float(dt)
-        self.vector = self.applied_force * self.inv_mass
+        self.vector = self.applied_force
 
         self.velocity += self.vector / self.mass * dt
         self.position += self.velocity * dt
@@ -98,8 +98,6 @@ class Actor:
             self.rotate(angle, axis)
 
         self.applied_force = Vector3(0, 0, 0)
-
-        # print(f"ACTOR[mass={self.mass}, pos={self.position}, velocity={self.velocity}, vector={self.vector}]")
 
     def rotate(self, angle: float, axis: Vector3):
         quat = [axis.x * np.sin(angle/2), axis.y * np.sin(angle/2), axis.z * np.sin(angle/2), np.cos(angle/2)]

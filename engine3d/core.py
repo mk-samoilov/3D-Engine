@@ -5,14 +5,14 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 class PhysicsEngine:
-    def __init__(self, gravity: Vector3 = Vector3(0, -9.8, 0)): # Vector3(0, -9.8, 0)
+    def __init__(self, gravity: Vector3 = Vector3(0, 0, 0)): # Vector3(0, -9.8, 0) - earth gravity
         self.gravity = gravity
         self.objects = []
 
     def update(self, dt: float):
         for obj in self.objects:
             if obj.physic:
-                gravitational_force = self.gravity * obj.mass
+                gravitational_force = self.gravity
                 obj.apply_force(gravitational_force)
             obj.update(dt=float(dt))
 
@@ -130,10 +130,10 @@ class Engine:
         glEnable(GL_TEXTURE_2D)
         glViewport(0, 0, self.width, self.height)
         glMatrixMode(GL_PROJECTION)
-        gluPerspective(45, (self.width / self.height), 0.1, 50.0)
+        gluPerspective(45, (self.width / self.height), 0.1, self.config["draw_distance"])
         glMatrixMode(GL_MODELVIEW)
 
-        self.physics_engine = PhysicsEngine(gravity=Vector3(0, -9.8, 0))
+        self.physics_engine = PhysicsEngine()
         self.fixed_time_step = 1 / 60
         self.accumulated_time = 0
 
@@ -200,7 +200,9 @@ class Engine:
             func()
 
         pygame.display.flip()
-        self.clock.tick(60)
+        try:
+            self.clock.tick(60)
+        except KeyboardInterrupt: pass
 
     def run(self):
         while self.handle_events():
