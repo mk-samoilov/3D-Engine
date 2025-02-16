@@ -1,8 +1,16 @@
+import curses
+
 import pygame, json
 
 from pygame.math import Vector3
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
+
+import threading
+import time
+
+from .actor import Actor
 
 class PhysicsEngine:
     def __init__(self, gravity: Vector3 = Vector3(0, 0, 0)): # Vector3(0, -9.8, 0) - earth gravity
@@ -100,6 +108,11 @@ class PhysicsEngine:
 
 class Engine:
     def __init__(self, player, config: str = "config.json"):
+        self.console_ = self.ConsoleComponent(core_class_instance=self)
+        curses.wrapper(self.console_.__run__)
+
+        self.console_.print("Initialization Engine3D...")
+
         with open(file=f"{str(config)}", mode="r") as file:
             self.config = json.load(fp=file)
 
@@ -107,6 +120,9 @@ class Engine:
         self.unlocked_rotation_camera = False
 
         pygame.init()
+
+        self.handling = True
+
         self.width = self.config["window_width"]
         self.height = self.config["window_height"]
         self.display = pygame.display.set_mode(
@@ -126,6 +142,8 @@ class Engine:
 
         pygame.display.set_caption(self.config["window_name"])
 
+        self.console_.print("Initialization OpenGL...")
+
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D)
         glViewport(0, 0, self.width, self.height)
@@ -133,15 +151,134 @@ class Engine:
         gluPerspective(45, (self.width / self.height), 0.1, self.config["draw_distance"])
         glMatrixMode(GL_MODELVIEW)
 
+        self.console_.print("Initialization PhysicsEngine component...")
+
         self.physics_engine = PhysicsEngine()
         self.fixed_time_step = 1 / 60
         self.accumulated_time = 0
 
-    def add_game_object(self, obj):
+        self.console_.print("Done initialization.")
+
+    class ConsoleComponent:
+        def __init__(self, core_class_instance) -> None:
+            self.down_bar: str = "ENGINE3D LOGS"
+            self.lines: list = []
+
+            self.core = core_class_instance
+
+            self.cursor_y = 0
+            self.cursor_x = 0
+
+            self.top_line = 0
+            self.left_margin = 0
+
+            self.handling = True
+
+            self.KEYS_BIND = \
+                {
+                    curses.KEY_LEFT: self.move_cursor_left,    # Move Left
+                    curses.KEY_RIGHT: self.move_cursor_right,  # Move Right
+                    curses.KEY_UP: self.move_cursor_up,        # Move Up
+                    curses.KEY_DOWN: self.move_cursor_down     # Move Down
+                }
+
+            self.COLOR_PAIRS = \
+                [
+                    {"pair-code": 1, "text": curses.COLOR_BLUE, "background": curses.COLOR_BLACK},
+                    {"pair-code": 2, "text": curses.COLOR_GREEN, "background": curses.COLOR_BLACK},
+                    {"pair-code": 3, "text": curses.COLOR_YELLOW, "background": curses.COLOR_BLACK},
+                    {"pair-code": 4, "text": curses.COLOR_CYAN, "background": curses.COLOR_BLACK}
+                ]
+
+        def __run__(self, stdscr) -> None:
+            self.stdscr = stdscr
+            curses.curs_set(0)
+
+            curses.start_color()
+            for pair in self.COLOR_PAIRS:
+                curses.init_pair(pair["pair-code"], pair["text"], pair["background"])
+
+            threading.Thread(target=self.loop).start()
+
+        def loop(self) -> None:
+            try:
+                while self.handling:
+                    self.display()
+                    time.sleep(0.1)
+            except KeyboardInterrupt: pass
+            finally:
+                self.handling = False
+                self.core.handling = False
+
+        def print(self, string: str) -> None:
+            self.lines.append(str(string))
+
+        def move_cursor_right(self):
+            if self.cursor_x < len(self.lines[self.cursor_y]):
+                self.cursor_x += 1
+            elif self.cursor_y < len(self.lines) - 1:
+                self.cursor_y += 1
+                self.cursor_x = 0
+            self.adjust_view()
+
+        def move_cursor_left(self):
+            if self.cursor_x > 0:
+                self.cursor_x -= 1
+            elif self.cursor_y > 0:
+                self.cursor_y -= 1
+                self.cursor_x = len(self.lines[self.cursor_y])
+            self.adjust_view()
+
+        def move_cursor_up(self):
+            if self.cursor_y > 0:
+                self.cursor_y -= 1
+                self.cursor_x = min(self.cursor_x, len(self.lines[self.cursor_y]))
+
+        def move_cursor_down(self):
+            if self.cursor_y < len(self.lines) - 1:
+                self.cursor_y += 1
+                self.cursor_x = min(self.cursor_x, len(self.lines[self.cursor_y]))
+
+        def handle_input(self, key):
+            try:
+                self.KEYS_BIND[key]()
+            except KeyError:
+                pass
+
+            self.adjust_view()
+
+        def adjust_view(self):
+            height, width = self.stdscr.getmaxyx()
+            if self.cursor_y < self.top_line:
+                self.top_line = self.cursor_y
+            elif self.cursor_y >= self.top_line + height - 2:
+                self.top_line = self.cursor_y - height + 3
+
+            if self.cursor_x < self.left_margin:
+                self.left_margin = max(0, self.cursor_x - 5)
+            elif self.cursor_x >= self.left_margin:
+                self.left_margin = self.cursor_x - 5
+
+        def display(self) -> None:
+            height, width = self.stdscr.getmaxyx()
+            self.stdscr.clear()
+
+            for y, line in enumerate(self.lines[self.top_line:self.top_line + height - 1]):
+                if y == height - 1:
+                    break
+
+                visible_line = line[self.left_margin:self.left_margin + width]
+                self.stdscr.addstr(y, 0, visible_line)
+
+            self.stdscr.addstr(height - 1, 0, self.down_bar, curses.A_REVERSE)
+
+            self.stdscr.refresh()
+
+    def add_game_object(self, obj: Actor):
         self.game_objects.append(obj)
         self.physics_engine.objects.append(obj)
 
-    def remove_game_object(self, obj):
+    def remove_game_object(self, obj: Actor):
         self.game_objects.remove(obj)
         self.physics_engine.objects.remove(obj)
 
@@ -200,11 +337,14 @@ class Engine:
             func()
 
         pygame.display.flip()
-        try:
-            self.clock.tick(60)
-        except KeyboardInterrupt: pass
+        self.clock.tick(60)
 
     def run(self):
-        while self.handle_events():
-            self.update()
-        pygame.quit()
+        try:
+            while self.handling and self.handle_events():
+                self.update()
+        except KeyboardInterrupt: pass
+        finally:
+            self.handling = False
+            self.console_.handling = False
+            pygame.quit()

@@ -1,5 +1,11 @@
-PyOpenGL==3.1.7
-pygame==2.6.1
-numpy==2.1.3
-Pillow==11.0.0
-# pyinstaller (for build)
+# REQUIRED:
+PyOpenGL~=3.1.7
+pygame~=2.6.1
+numpy~=2.1.3
+Pillow~=11.0.0
+
+# ADDITIONALLY FOR WINDOWS:
+# windows-curses~=2.4.1
+
+# FOR BUILDING BINARY FILES:
+# pyinstaller~=6.12.0
