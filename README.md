@@ -45,6 +45,10 @@ Or
 ```
 pip install -r requirements.txt
 ```
+AND ADDITIONAL FOR WINDOWS:
+```
+pip install windows-curses~=2.4.1
+```
 
 ## Structure
 
@@ -53,8 +57,8 @@ The engine is organized into several modules:
 - `core.py`: Contains the main `Engine` class that handles the game loop and OpenGL setup.
 - `camera.py`: Implements the `Camera` class for 3D navigation.
 - `actor.py`: Defines the `Actor` class for game objects.
-- `mesh.py`: Contains the `Mesh` class for storing 3D model data.
-- `methods.py`: Contains function `load_mesh_on_file` and `load_texture_on_file`.
+- `classes.py`: Engine second classes.
+- `methods.py`: Engine second methods.
 
 ## Main Components
 
@@ -83,14 +87,14 @@ The `Actor` class represents game objects in the 3D world. It:
 
 ### Mesh
 
-The `Mesh` class stores the vertex and face data for 3D models.
+The `Mesh` class (in `classes.py`) stores the vertex and face data for 3D models.
 
 ## Usage
 
 To use the engine, follow these steps:
 
 1. Create an instance of the `Engine` class.
-2. Load 3D models using `load_mesh_on_file`.
+2. Load 3D models using `load_mesh_on_file` or based models from `meshes.py`.
 3. Create `Actor` instances with the loaded meshes.
 4. Add the actors to the engine using `add_game_object`.
 5. Call the `run` method on the engine to start the game loop.
@@ -100,11 +104,10 @@ To use the engine, follow these steps:
 Here's a simple example that loads and displays a cube and cylinder:
 
 ```python
-import math
+from engine3d import Engine, Actor, Camera, load_mesh_on_file, load_texture_on_file
+from engine3d.meshes import gen_cube
 
 from pygame import Vector3
-
-from engine3d import Engine, Actor, Camera, load_mesh_on_file, load_texture_on_file
 
 player = Camera((0, 0, 12), collision=True)
 game = Engine(player=player)
@@ -112,40 +115,23 @@ game = Engine(player=player)
 blue_texture = load_texture_on_file(file="engine3d/exemple_textures/blue_texture.png")
 # Don't forget to look at engine3d/exemple_textures/test.png ))))
 
-cube_mesh = load_mesh_on_file(file="engine3d/exemple_meshes/cube.json")
+cube_mesh = gen_cube(width=1, height=1, depth=1)
 cylinder_mesh = load_mesh_on_file(file="engine3d/exemple_meshes/cylinder.json")
 
-cube = Actor(position=(0, 0, 0), rotation=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision=True)
+cube = Actor(position=(0, 0, 0), rotation=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision=True, physic=True, mass=2.5)
 game.add_game_object(cube)
 
-physical_cube = Actor(position=(0, 7, 0), rotation=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision=True, physic=True)
-game.add_game_object(physical_cube)
+cube_2 = Actor(position=(0, 7, 0), rotation=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision=True, physic=True)
+game.add_game_object(cube_2)
 
-radius = 6 # Distance from the cube
-cylinder = Actor(position=(radius, 0, 0), rotation=(0, 0, 0), mesh=cylinder_mesh, texture=blue_texture, collision=True)
+cylinder = Actor(position=(1, 12, 0), rotation=(0, 0, 0), mesh=cylinder_mesh, texture=blue_texture, collision=True, physic=True, mass=0.1)
 game.add_game_object(cylinder)
-cylinder.apply_torque(Vector3(5, 5, 5))
 
 angle = 0
 
-def update():
-    global angle
-    angle += 0.02
+cube.apply_force(force=Vector3(0, 100, 0))
+cube_2.apply_force(force=Vector3(0, -100, 0))
 
-    new_x = radius * math.cos(angle)
-    new_z = radius * math.sin(angle)
-    new_position = Vector3((new_x, 0, new_z))
-
-    movement = new_position - cylinder.position
-    cylinder.position = new_position
-
-    camera_pos = Vector3(game.player.position)
-
-    if cylinder.check_collision(camera_pos):
-        push_direction = movement.normalize()
-        game.player.position += push_direction * 0.1
-
-game.add_update_function(func=update)
 game.run()
 ```
 

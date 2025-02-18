@@ -18,6 +18,9 @@ game.add_game_object(cube)
 cube_2 = Actor(position=(0, 7, 0), rotation=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision=True, physic=True)
 game.add_game_object(cube_2)
 
+cylinder = Actor(position=(1, 12, 0), rotation=(0, 0, 0), mesh=cylinder_mesh, texture=blue_texture, collision=True, physic=True, mass=0.1)
+game.add_game_object(cylinder)
+
 angle = 0
 
 cube.apply_force(force=Vector3(0, 100, 0))
