@@ -1,6 +1,6 @@
 import curses
 
-import pygame, json
+import pygame
 
 from pygame.math import Vector3
 
@@ -9,6 +9,7 @@ from OpenGL.GLU import *
 
 import threading
 import time
+import importlib
 
 from .actor import Actor
 
@@ -107,32 +108,42 @@ class PhysicsEngine:
         return min(overlap)
 
 class Engine:
-    def __init__(self, player, config: str = "config.json"):
+    def __init__(self, player, config: str = "config", console_inside_game: bool = True):
         self.console_ = self.ConsoleComponent(core_class_instance=self)
         curses.wrapper(self.console_.__run__)
 
         self.console_.print("Initialization Engine3D...")
 
-        with open(file=f"{str(config)}", mode="r") as file:
-            self.config = json.load(fp=file)
+        self.config = importlib.import_module(name=str(config))
+
+        self.console_inside_game = bool(console_inside_game)
+        self.game_console_visible = True
+        self.game_console_text = ""
+        self.console_surface = pygame.Surface((self.config.window_width, 200))
+        self.console_surface.set_alpha(200)
+        self.console_surface.fill((0, 0, 0))
 
         self.last_mouse = (0, 0, 0)
         self.unlocked_rotation_camera = False
 
         pygame.init()
+        pygame.font.init()
+
+        try:
+            self.game_console_font = pygame.font.Font("./engine3d/fonts/default.ttf", 24)
+        except pygame.error as e:
+            self.console_.print(f"ERROR loading font: '{e}', loading default system font...")
+            self.game_console_font = pygame.font.SysFont(None, 24)
 
         self.handling = True
 
-        self.width = self.config["window_width"]
-        self.height = self.config["window_height"]
         self.display = pygame.display.set_mode(
             (
-                self.width,
-                self.height
+                self.config.window_width,
+                self.config.window_height
             ), pygame.OPENGL | pygame.DOUBLEBUF)
 
-        self.window_icon = pygame.image.load(self.config["window_icon"])
-        pygame.display.set_icon(self.window_icon)
+        pygame.display.set_icon(pygame.image.load(self.config.window_icon))
 
         self.custom_update_functions = []
 
@@ -140,16 +151,18 @@ class Engine:
         self.player = player
         self.game_objects = []
 
-        pygame.display.set_caption(self.config["window_name"])
+        pygame.display.set_caption(self.config.window_name)
 
         self.console_.print("Initialization OpenGL...")
 
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D)
-        glViewport(0, 0, self.width, self.height)
+        glViewport(0, 0, self.config.window_width, self.config.window_height)
         glMatrixMode(GL_PROJECTION)
-        gluPerspective(45, (self.width / self.height), 0.1, self.config["draw_distance"])
+        gluPerspective(45, (self.config.window_width / self.config.window_height), 0.1, self.config.draw_distance)
         glMatrixMode(GL_MODELVIEW)
+
+        glEnable(GL_MULTISAMPLE)
 
         self.console_.print("Initialization PhysicsEngine component...")
 
@@ -192,6 +205,8 @@ class Engine:
 
         def __run__(self, stdscr) -> None:
             self.stdscr = stdscr
+            self.stdscr.clear()
+
             curses.curs_set(0)
 
             curses.start_color()
@@ -281,7 +296,6 @@ class Engine:
     def remove_game_object(self, obj: Actor):
         self.game_objects.remove(obj)
         self.physics_engine.objects.remove(obj)
-
 
     def handle_events(self):
         for event in pygame.event.get():
