@@ -116,10 +116,11 @@ class Engine:
 
         self.config = importlib.import_module(name=str(config))
 
+
         self.console_inside_game = bool(console_inside_game)
         self.game_console_visible = True
         self.game_console_text = ""
-        self.console_surface = pygame.Surface((self.config.window_width, 200))
+        self.console_surface = pygame.Surface((self.config.WINDOW_WIDTH, 200))
         self.console_surface.set_alpha(200)
         self.console_surface.fill((0, 0, 0))
 
@@ -128,6 +129,13 @@ class Engine:
 
         pygame.init()
         pygame.font.init()
+
+        pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLEBUFFERS, 1)
+        pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLESAMPLES, self.config.MSAA_X)
+        pygame.display.gl_set_attribute(pygame.GL_DEPTH_SIZE, 24)
+        pygame.display.gl_set_attribute(pygame.GL_STENCIL_SIZE, self.config.MSAA_X)
+        pygame.display.gl_set_attribute(pygame.GL_ALPHA_SIZE, self.config.MSAA_X)
+        pygame.display.gl_set_attribute(pygame.GL_DOUBLEBUFFER, 1)
 
         try:
             self.game_console_font = pygame.font.Font("./engine3d/fonts/default.ttf", 24)
@@ -139,11 +147,11 @@ class Engine:
 
         self.display = pygame.display.set_mode(
             (
-                self.config.window_width,
-                self.config.window_height
+                self.config.WINDOW_WIDTH,
+                self.config.WINDOW_HEIGHT
             ), pygame.OPENGL | pygame.DOUBLEBUF)
 
-        pygame.display.set_icon(pygame.image.load(self.config.window_icon))
+        pygame.display.set_icon(pygame.image.load(self.config.WINDOW_ICON))
 
         self.custom_update_functions = []
 
@@ -151,18 +159,25 @@ class Engine:
         self.player = player
         self.game_objects = []
 
-        pygame.display.set_caption(self.config.window_name)
+        pygame.display.set_caption(self.config.WINDOW_TITLE)
 
         self.console_.print("Initialization OpenGL...")
 
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D)
-        glViewport(0, 0, self.config.window_width, self.config.window_height)
-        glMatrixMode(GL_PROJECTION)
-        gluPerspective(45, (self.config.window_width / self.config.window_height), 0.1, self.config.draw_distance)
-        glMatrixMode(GL_MODELVIEW)
-
         glEnable(GL_MULTISAMPLE)
+        glEnable(GL_LINE_SMOOTH)
+        glEnable(GL_POLYGON_SMOOTH)
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        glViewport(0, 0, self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT)
+        glMatrixMode(GL_PROJECTION)
+        gluPerspective(45, (self.config.WINDOW_WIDTH / self.config.WINDOW_HEIGHT), 0.1, self.config.DRAW_DISTANCE)
+        glMatrixMode(GL_MODELVIEW)
 
         self.console_.print("Initialization PhysicsEngine component...")
 
@@ -208,6 +223,7 @@ class Engine:
             self.stdscr.clear()
 
             curses.curs_set(0)
+
 
             curses.start_color()
             for pair in self.COLOR_PAIRS:
@@ -314,6 +330,7 @@ class Engine:
                     self.player.rotate(x_offset, y_offset)
 
         keys = pygame.key.get_pressed()
+
 
         if keys[pygame.K_w]:
             self.player.move(self.player.front * 0.1, self.game_objects)
