@@ -26,7 +26,7 @@ cube_2.apply_force(force=Vector3(0, -100, 0))
 def update_fps_hud():
     hud = HUD(
         font_class=game.default_font,
-        text=f"FPS: {game.clock.get_fps()}",
+        text=f"FPS: {game.clock.get_fps():.1f}",
         color=(255, 255, 255),
         position=(200, 150)
     )
