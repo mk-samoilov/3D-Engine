@@ -119,8 +119,6 @@ class Engine:
 
 
         self.console_inside_game = bool(console_inside_game)
-        self.game_console_visible = True
-        self.game_console_text = ""
         self.console_surface = pygame.Surface((self.config.WINDOW_WIDTH, 200))
         self.console_surface.set_alpha(200)
         self.console_surface.fill((0, 0, 0))
@@ -171,6 +169,11 @@ class Engine:
         glEnable(GL_POLYGON_SMOOTH)
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
         glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
+
+        glEnable(GL_LIGHTING)
+        glEnable(GL_LIGHT0)
+        glEnable(GL_COLOR_MATERIAL)
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
 
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -246,6 +249,10 @@ class Engine:
 
         def print(self, string: str) -> None:
             self.lines.append(str(string))
+            height, _ = self.stdscr.getmaxyx()
+            visible_height = height - 1
+            if self.top_line + visible_height >= len(self.lines) - 1:
+                self.top_line = max(0, len(self.lines) - visible_height)
 
         def move_cursor_right(self):
             if self.cursor_x < len(self.lines[self.cursor_y]):
