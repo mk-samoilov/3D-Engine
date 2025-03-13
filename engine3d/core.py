@@ -12,6 +12,7 @@ import time
 import importlib
 
 from .actor import Actor
+from .hud import HUDComponent
 
 class PhysicsEngine:
     def __init__(self, gravity: Vector3 = Vector3(0, 0, 0)): # Vector3(0, -9.8, 0) - earth gravity
@@ -138,10 +139,10 @@ class Engine:
         pygame.display.gl_set_attribute(pygame.GL_DOUBLEBUFFER, 1)
 
         try:
-            self.game_console_font = pygame.font.Font("./engine3d/fonts/default.ttf", 24)
-        except pygame.error as e:
+            self.default_font = pygame.font.Font("./engine3d/fonts/default.ttf", 18)
+        except (pygame.error, FileNotFoundError) as e:
             self.console_.print(f"ERROR loading font: '{e}', loading default system font...")
-            self.game_console_font = pygame.font.SysFont(None, 24)
+            self.default_font = pygame.font.SysFont(None, 24)
 
         self.handling = True
 
@@ -178,6 +179,9 @@ class Engine:
         glMatrixMode(GL_PROJECTION)
         gluPerspective(45, (self.config.WINDOW_WIDTH / self.config.WINDOW_HEIGHT), 0.1, self.config.DRAW_DISTANCE)
         glMatrixMode(GL_MODELVIEW)
+
+        self.console_.print("Initialization HUD component...")
+        self.hud_component = HUDComponent()
 
         self.console_.print("Initialization PhysicsEngine component...")
 
@@ -223,7 +227,6 @@ class Engine:
             self.stdscr.clear()
 
             curses.curs_set(0)
-
 
             curses.start_color()
             for pair in self.COLOR_PAIRS:
@@ -366,6 +369,11 @@ class Engine:
 
         for func in self.custom_update_functions:
             func()
+
+        self.hud_component.render_all_hud(
+            window_width=self.config.WINDOW_WIDTH,
+            window_height=self.config.WINDOW_HEIGHT
+        )
 
         pygame.display.flip()
         self.clock.tick(60)

@@ -1,4 +1,4 @@
-from engine3d import Engine, Actor, Camera, load_mesh_on_file, load_texture_on_file
+from engine3d import Engine, Actor, Camera, HUD, load_mesh_on_file, load_texture_on_file
 from engine3d.meshes import gen_cube
 
 from pygame import Vector3
@@ -23,4 +23,14 @@ angle = 0
 cube.apply_force(force=Vector3(0, 100, 0))
 cube_2.apply_force(force=Vector3(0, -100, 0))
 
+def update_fps_hud():
+    hud = HUD(
+        font_class=game.default_font,
+        text=f"FPS: {game.clock.get_fps()}",
+        color=(255, 255, 255),
+        position=(200, 150)
+    )
+    game.hud_component.update_hud(uuid="FPS_HUD", hud=hud)
+
+game.add_update_function(func=update_fps_hud)
 game.run()
