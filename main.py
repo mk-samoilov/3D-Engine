@@ -1,27 +1,51 @@
-from engine3d import Engine, Actor, Camera, HUD, load_mesh_on_file, load_texture_on_file
-from engine3d.meshes import gen_cube
-
+from engine3d import Engine, Actor, Camera, HUD, Light, load_texture_on_file
+from engine3d.meshes import gen_sphere
 from pygame import Vector3
+import math
 
-player = Camera((0, 0, 12), collision=True)
+player = Camera((5, 5, 40), collision=True)
 game = Engine(player=player)
 
-blue_texture = load_texture_on_file(file="engine3d/exemple_textures/blue_texture.png")
-# Don't forget to look at engine3d/exemple_textures/test.png ))))
+blue_texture = load_texture_on_file(file="engine3d/exemple_textures/sun_texture.png")
+planet_texture_1 = load_texture_on_file(file="engine3d/exemple_textures/planet_texture_1.png")
 
-cube_mesh = gen_cube(width=1, height=1, depth=1)
-cylinder_mesh = load_mesh_on_file(file="engine3d/exemple_meshes/cylinder.json")
+light = Light(
+    position=(0, 0, 0),
+    color=(1.0, 1.0, 1.0),
+    ambient=2.3,
+    diffuse=8000,
+    specular=0.5
+)
+game.add_light(light)
 
-cube = Actor(position=(0, 0, 0), rotation=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision=True, physic=True, mass=2.5)
-game.add_game_object(cube)
+sun_actor = Actor(
+    position=(0, 0, 0),
+    rotation=(0, 0, 0),
+    mesh=gen_sphere(radius=3.1, segments=32),
+    texture=blue_texture,
+    collision=True
+)
+game.add_game_object(sun_actor)
 
-cube_2 = Actor(position=(0, 7, 0), rotation=(0, 0, 0), mesh=cube_mesh, texture=blue_texture, collision=True, physic=True)
-game.add_game_object(cube_2)
+small_planet = Actor(
+    position=(0, 0, 16),
+    rotation=(0, 0, 0),
+    mesh=gen_sphere(radius=0.8, segments=32),
+    texture=planet_texture_1,
+    collision=True
+)
+game.add_game_object(small_planet)
 
+orbit_radius = 16
+orbit_speed = 1
 angle = 0
 
-cube.apply_force(force=Vector3(0, 100, 0))
-cube_2.apply_force(force=Vector3(0, -100, 0))
+def update_planet_orbit():
+    global angle
+    angle += orbit_speed / 170
+    x = math.cos(angle) * orbit_radius
+    z = math.sin(angle) * orbit_radius
+    small_planet.position = Vector3(x, 0, z)
 
 def update_fps_hud():
     hud = HUD(
@@ -32,5 +56,17 @@ def update_fps_hud():
     )
     game.hud_component.update_hud(uuid="FPS_HUD", hud=hud)
 
+def update_player_pos_hud():
+    hud = HUD(
+        font_class=game.default_font,
+        text=f"Player pos: {player.position}",
+        color=(255, 255, 255),
+        position=(200, 170)
+    )
+    game.hud_component.update_hud(uuid="PLAYER_POS_HUD", hud=hud)
+
+game.add_update_function(func=update_planet_orbit)
+game.add_update_function(func=update_player_pos_hud)
 game.add_update_function(func=update_fps_hud)
+
 game.run()

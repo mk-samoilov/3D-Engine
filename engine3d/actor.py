@@ -21,28 +21,91 @@ class Actor:
         self.texture = texture
         self.bounding_box = self.calculate_bounding_box()
         self.collision = collision
+        self.normals = self.calculate_normals()
 
         self.inertia_tensor = self.calculate_inertia_tensor()
         self.inv_inertia_tensor = np.linalg.inv(self.inertia_tensor)
         self.friction = 0.3
         self.applied_force = Vector3(0, 0, 0)
 
+        self.__setup_vbo__()
+
+    def __setup_vbo__(self):
+        self.vbo = glGenBuffers(1)
+        self.ibo = glGenBuffers(1)
+        self.nbo = glGenBuffers(1)
+        self.tbo = glGenBuffers(1)
+
+        vertex_data = []
+        normal_data = []
+        uv_data = []
+        index_data = []
+
+        for face_idx, (face, uv_face) in enumerate(zip(self.faces, self.uvs)):
+            for vertex_id, uv in zip(face, uv_face):
+                vertex_data.extend(self.vertices[vertex_id])
+                normal_data.extend(self.normals[vertex_id])
+                uv_data.extend(uv)
+                index_data.append(face_idx * 3 + list(face).index(vertex_id))
+
+        vertex_data = np.array(vertex_data, dtype=np.float32)
+        normal_data = np.array(normal_data, dtype=np.float32)
+        uv_data = np.array(uv_data, dtype=np.float32)
+        index_data = np.array(index_data, dtype=np.uint32)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        glBufferData(GL_ARRAY_BUFFER, vertex_data.nbytes, vertex_data, GL_STATIC_DRAW)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.nbo)
+        glBufferData(GL_ARRAY_BUFFER, normal_data.nbytes, normal_data, GL_STATIC_DRAW)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.tbo)
+        glBufferData(GL_ARRAY_BUFFER, uv_data.nbytes, uv_data, GL_STATIC_DRAW)
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_data.nbytes, index_data, GL_STATIC_DRAW)
+
+        self.num_indices = len(index_data)
+
+    def calculate_normals(self):
+        normals = np.zeros_like(self.vertices)
+        for face in self.faces:
+            v0, v1, v2 = [self.vertices[i] for i in face]
+            normal = np.cross(v1 - v0, v2 - v0)
+            normal = normal / (np.linalg.norm(normal) or 1)
+            for vertex_id in face:
+                normals[vertex_id] += normal
+        return normals / (np.linalg.norm(normals, axis=1)[:, np.newaxis] + 1e-6)
+
     def render(self):
         glPushMatrix()
         glTranslatef(self.position.x, self.position.y, self.position.z)
-        glRotatef(self.rotation[0], 1, 0, 0)
-        glRotatef(self.rotation[1], 0, 1, 0)
-        glRotatef(self.rotation[2], 0, 0, 1)
+        glRotatef(self.rotation.x, 1, 0, 0)
+        glRotatef(self.rotation.y, 0, 1, 0)
+        glRotatef(self.rotation.z, 0, 0, 1)
 
         glBindTexture(GL_TEXTURE_2D, self.texture)
         glEnable(GL_TEXTURE_2D)
 
-        glBegin(GL_TRIANGLES)
-        for face, uv_face in zip(self.faces, self.uvs):
-            for vertex_id, uv in zip(face, uv_face):
-                glTexCoord2fv(uv)
-                glVertex3fv(self.vertices[vertex_id])
-        glEnd()
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_NORMAL_ARRAY)
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        glVertexPointer(3, GL_FLOAT, 0, None)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.nbo)
+        glNormalPointer(GL_FLOAT, 0, None)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.tbo)
+        glTexCoordPointer(2, GL_FLOAT, 0, None)
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
+        glDrawElements(GL_TRIANGLES, self.num_indices, GL_UNSIGNED_INT, None)
+
+        glDisableClientState(GL_VERTEX_ARRAY)
+        glDisableClientState(GL_NORMAL_ARRAY)
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY)
 
         glDisable(GL_TEXTURE_2D)
         glPopMatrix()

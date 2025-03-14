@@ -13,6 +13,7 @@ import importlib
 
 from .actor import Actor
 from .hud import HUDComponent
+from .light import Light
 
 class PhysicsEngine:
     def __init__(self, gravity: Vector3 = Vector3(0, 0, 0)): # Vector3(0, -9.8, 0) - earth gravity
@@ -137,7 +138,7 @@ class Engine:
         pygame.display.gl_set_attribute(pygame.GL_DOUBLEBUFFER, 1)
 
         try:
-            self.default_font = pygame.font.Font("./engine3d/fonts/default.ttf", 18)
+            self.default_font = pygame.font.Font("./engine3d/fonts/default.ttf", int(self.config.WINDOW_WIDTH / 100))
         except (pygame.error, FileNotFoundError) as e:
             self.console_.print(f"ERROR loading font: '{e}', loading default system font...")
             self.default_font = pygame.font.SysFont(None, 24)
@@ -157,6 +158,8 @@ class Engine:
         self.clock = pygame.time.Clock()
         self.player = player
         self.game_objects = []
+        self.lights = []
+        self.max_lights = 8
 
         pygame.display.set_caption(self.config.WINDOW_TITLE)
 
@@ -170,11 +173,6 @@ class Engine:
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
         glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
 
-        glEnable(GL_LIGHTING)
-        glEnable(GL_LIGHT0)
-        glEnable(GL_COLOR_MATERIAL)
-        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
-
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
@@ -183,7 +181,17 @@ class Engine:
         gluPerspective(45, (self.config.WINDOW_WIDTH / self.config.WINDOW_HEIGHT), 0.1, self.config.DRAW_DISTANCE)
         glMatrixMode(GL_MODELVIEW)
 
+        glEnable(GL_LIGHTING)
+        glEnable(GL_LIGHT7)
+        glEnable(GL_COLOR_MATERIAL)
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0)
+
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.0, 0.0, 0.0, 1.0])
+
         self.console_.print("Initialization HUD component...")
+
         self.hud_component = HUDComponent()
 
         self.console_.print("Initialization PhysicsEngine component...")
@@ -323,6 +331,13 @@ class Engine:
         self.game_objects.remove(obj)
         self.physics_engine.objects.remove(obj)
 
+    def add_light(self, light: Light):
+        if len(self.lights) < self.max_lights:
+            light.setup(GL_LIGHT0 + len(self.lights))
+            self.lights.append(light)
+            return True
+        return False
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -370,6 +385,9 @@ class Engine:
         while self.accumulated_time >= self.fixed_time_step:
             self.physics_engine.update(dt=self.fixed_time_step)
             self.accumulated_time -= self.fixed_time_step
+
+        for light in self.lights:
+            light.update()
 
         for game_object in self.game_objects:
             game_object.render()
