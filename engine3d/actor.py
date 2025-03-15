@@ -28,30 +28,27 @@ class Actor:
         self.friction = 0.3
         self.applied_force = Vector3(0, 0, 0)
 
-        self.__setup_vbo__()
-
     def __setup_vbo__(self):
         self.vbo = glGenBuffers(1)
         self.ibo = glGenBuffers(1)
         self.nbo = glGenBuffers(1)
         self.tbo = glGenBuffers(1)
 
-        vertex_data = []
-        normal_data = []
-        uv_data = []
-        index_data = []
+        num_faces = len(self.faces)
+        num_vertices_per_face = 3
+
+        vertex_data = np.zeros(num_faces * num_vertices_per_face * 3, dtype=np.float32)
+        normal_data = np.zeros(num_faces * num_vertices_per_face * 3, dtype=np.float32)
+        uv_data = np.zeros(num_faces * num_vertices_per_face * 2, dtype=np.float32)
+        index_data = np.arange(num_faces * num_vertices_per_face, dtype=np.uint32)
 
         for face_idx, (face, uv_face) in enumerate(zip(self.faces, self.uvs)):
-            for vertex_id, uv in zip(face, uv_face):
-                vertex_data.extend(self.vertices[vertex_id])
-                normal_data.extend(self.normals[vertex_id])
-                uv_data.extend(uv)
-                index_data.append(face_idx * 3 + list(face).index(vertex_id))
-
-        vertex_data = np.array(vertex_data, dtype=np.float32)
-        normal_data = np.array(normal_data, dtype=np.float32)
-        uv_data = np.array(uv_data, dtype=np.float32)
-        index_data = np.array(index_data, dtype=np.uint32)
+            base_idx = face_idx * num_vertices_per_face
+            for i, (vertex_id, uv) in enumerate(zip(face, uv_face)):
+                idx = base_idx + i
+                vertex_data[idx * 3:(idx + 1) * 3] = self.vertices[vertex_id]
+                normal_data[idx * 3:(idx + 1) * 3] = self.normals[vertex_id]
+                uv_data[idx * 2:(idx + 1) * 2] = uv
 
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         glBufferData(GL_ARRAY_BUFFER, vertex_data.nbytes, vertex_data, GL_STATIC_DRAW)
@@ -69,12 +66,16 @@ class Actor:
 
     def calculate_normals(self):
         normals = np.zeros_like(self.vertices)
-        for face in self.faces:
-            v0, v1, v2 = [self.vertices[i] for i in face]
-            normal = np.cross(v1 - v0, v2 - v0)
-            normal = normal / (np.linalg.norm(normal) or 1)
-            for vertex_id in face:
-                normals[vertex_id] += normal
+        v0 = self.vertices[self.faces[:, 0]]
+        v1 = self.vertices[self.faces[:, 1]]
+        v2 = self.vertices[self.faces[:, 2]]
+        face_normals = np.cross(v1 - v0, v2 - v0)
+        face_normals /= np.linalg.norm(face_normals, axis=1)[:, np.newaxis] + 1e-6
+
+        np.add.at(normals, self.faces[:, 0], face_normals)
+        np.add.at(normals, self.faces[:, 1], face_normals)
+        np.add.at(normals, self.faces[:, 2], face_normals)
+
         return normals / (np.linalg.norm(normals, axis=1)[:, np.newaxis] + 1e-6)
 
     def render(self):

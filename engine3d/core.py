@@ -182,6 +182,8 @@ class Engine:
 
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.0, 0.0, 0.0, 1.0])
 
+        self.render_loading_screen()
+
         self.console_.print("Initialization HUD component...")
 
         self.hud_component = HUDComponent()
@@ -192,7 +194,9 @@ class Engine:
         self.fixed_time_step = 1 / 60
         self.accumulated_time = 0
 
-        self.console_.print("Done loading.")
+        self.loading_complete = False
+
+        self.console_.print("Done loading core components.")
 
     class ConsoleComponent:
         def __init__(self, core_class_instance) -> None:
@@ -330,6 +334,52 @@ class Engine:
 
         return True
 
+    def render_loading_screen(self):
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        glOrtho(0, self.config.WINDOW_WIDTH, 0, self.config.WINDOW_HEIGHT, -1, 1)
+
+        glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        glLoadIdentity()
+
+        glDisable(GL_DEPTH_TEST)
+        glDisable(GL_LIGHTING)
+
+        font = self.fonts.default_2
+        text_surface = font.render("Loading scene and assets...", True, (255, 255, 255))
+        text_data = pygame.image.tostring(text_surface, "RGBA", True)
+
+        text_x = (self.config.WINDOW_WIDTH - text_surface.get_width()) // 2
+        text_y = (self.config.WINDOW_HEIGHT - text_surface.get_height()) // 2
+
+        glRasterPos2f(text_x, text_y)
+        glDrawPixels(
+            text_surface.get_width(),
+            text_surface.get_height(),
+            GL_RGBA, GL_UNSIGNED_BYTE, text_data
+        )
+
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_LIGHTING)
+        glMatrixMode(GL_PROJECTION)
+        glPopMatrix()
+        glMatrixMode(GL_MODELVIEW)
+        glPopMatrix()
+
+        pygame.display.flip()
+
+    def load_all_objects(self):
+        for obj in self.game_objects:
+            obj.__setup_vbo__()
+            self.console_.print(f"Loaded object at {obj.position}")
+
+        self.loading_complete = True
+        self.console_.print("Scene and assets loaded.")
+
     def add_update_function(self, func):
         self.custom_update_functions.append(func)
 
@@ -367,9 +417,14 @@ class Engine:
 
     def run(self):
         try:
+            while not self.loading_complete:
+                self.load_all_objects()
+                pygame.event.pump()
+
             while self.handling and self.handle_events():
                 self.update()
-        except KeyboardInterrupt: pass
+        except KeyboardInterrupt:
+            pass
         finally:
             self.handling = False
             self.console_.handling = False
