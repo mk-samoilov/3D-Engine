@@ -15,6 +15,7 @@ class HUD:
 class HUDComponent:
     def __init__(self):
         self.hud_elements = {}
+        self.visible = True
 
     def update_hud(self, uuid: str, hud: HUD):
         self.hud_elements[uuid] = hud
@@ -27,29 +28,31 @@ class HUDComponent:
         window_width = int(window_width)
         window_height = int(window_height)
 
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        glOrtho(0, window_width, 0, window_height, -1, 1)
+        if self.visible:
+            glMatrixMode(GL_PROJECTION)
+            glPushMatrix()
+            glLoadIdentity()
+            glOrtho(0, window_width, 0, window_height, -1, 1)
 
-        glMatrixMode(GL_MODELVIEW)
-        glPushMatrix()
-        glLoadIdentity()
+            glMatrixMode(GL_MODELVIEW)
+            glPushMatrix()
+            glLoadIdentity()
 
-        glDisable(GL_DEPTH_TEST)
+            glDisable(GL_DEPTH_TEST)
 
-        for element in self.hud_elements.values():
-            text_surface = element.font_class.render(element.text, True, element.text_color)
-            text_data = pygame.image.tostring(text_surface, "RGBA", True)
-            glRasterPos2f(element.position[0], window_height - element.position[1])
-            glDrawPixels(
-                text_surface.get_width(),
-                text_surface.get_height(),
-                GL_RGBA, GL_UNSIGNED_BYTE, text_data
-            )
+            for element in self.hud_elements.values():
+                text_surface = element.font_class.render(element.text, True, element.text_color)
+                text_data = pygame.image.tostring(text_surface, "RGBA", True)
+                glRasterPos2f(element.position[0], window_height - element.position[1])
+                glDrawPixels(
+                    text_surface.get_width(),
+                    text_surface.get_height(),
+                    GL_RGBA, GL_UNSIGNED_BYTE, text_data
+                )
 
-        glEnable(GL_DEPTH_TEST)
-        glMatrixMode(GL_PROJECTION)
-        glPopMatrix()
-        glMatrixMode(GL_MODELVIEW)
-        glPopMatrix()
+            glEnable(GL_DEPTH_TEST)
+            glMatrixMode(GL_PROJECTION)
+            glEnable(GL_LIGHTING)
+            glPopMatrix()
+            glMatrixMode(GL_MODELVIEW)
+            glPopMatrix()

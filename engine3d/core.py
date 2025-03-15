@@ -1,7 +1,3 @@
-import curses
-
-import pygame
-
 from pygame.math import Vector3
 
 from OpenGL.GL import *
@@ -10,6 +6,9 @@ from OpenGL.GLU import *
 import threading
 import time
 import importlib
+import curses
+import os
+import pygame
 
 from .actor import Actor
 from .hud import HUDComponent
@@ -118,12 +117,6 @@ class Engine:
 
         self.config = importlib.import_module(name=str(config))
 
-
-        self.console_inside_game = bool(console_inside_game)
-        self.console_surface = pygame.Surface((self.config.WINDOW_WIDTH, 200))
-        self.console_surface.set_alpha(200)
-        self.console_surface.fill((0, 0, 0))
-
         self.last_mouse = (0, 0, 0)
         self.unlocked_rotation_camera = False
 
@@ -136,12 +129,6 @@ class Engine:
         pygame.display.gl_set_attribute(pygame.GL_STENCIL_SIZE, self.config.MSAA_X)
         pygame.display.gl_set_attribute(pygame.GL_ALPHA_SIZE, self.config.MSAA_X)
         pygame.display.gl_set_attribute(pygame.GL_DOUBLEBUFFER, 1)
-
-        try:
-            self.default_font = pygame.font.Font("./engine3d/fonts/default.ttf", int(self.config.WINDOW_WIDTH / 100))
-        except (pygame.error, FileNotFoundError) as e:
-            self.console_.print(f"ERROR loading font: '{e}', loading default system font...")
-            self.default_font = pygame.font.SysFont(None, 24)
 
         self.handling = True
 
@@ -162,6 +149,11 @@ class Engine:
         self.max_lights = 8
 
         pygame.display.set_caption(self.config.WINDOW_TITLE)
+
+        self.console_inside_game = bool(console_inside_game)
+        self.game_console_history = []
+
+        self.fonts = self.Fonts(core_class_instance=self, fonts_folder="./engine3d/fonts")
 
         self.console_.print("Initialization OpenGL...")
 
@@ -209,21 +201,10 @@ class Engine:
 
             self.core = core_class_instance
 
-            self.cursor_y = 0
-            self.cursor_x = 0
-
             self.top_line = 0
             self.left_margin = 0
 
             self.handling = True
-
-            self.KEYS_BIND = \
-                {
-                    curses.KEY_LEFT: self.move_cursor_left,    # Move Left
-                    curses.KEY_RIGHT: self.move_cursor_right,  # Move Right
-                    curses.KEY_UP: self.move_cursor_up,        # Move Up
-                    curses.KEY_DOWN: self.move_cursor_down     # Move Down
-                }
 
             self.COLOR_PAIRS = \
                 [
@@ -262,52 +243,6 @@ class Engine:
             if self.top_line + visible_height >= len(self.lines) - 1:
                 self.top_line = max(0, len(self.lines) - visible_height)
 
-        def move_cursor_right(self):
-            if self.cursor_x < len(self.lines[self.cursor_y]):
-                self.cursor_x += 1
-            elif self.cursor_y < len(self.lines) - 1:
-                self.cursor_y += 1
-                self.cursor_x = 0
-            self.adjust_view()
-
-        def move_cursor_left(self):
-            if self.cursor_x > 0:
-                self.cursor_x -= 1
-            elif self.cursor_y > 0:
-                self.cursor_y -= 1
-                self.cursor_x = len(self.lines[self.cursor_y])
-            self.adjust_view()
-
-        def move_cursor_up(self):
-            if self.cursor_y > 0:
-                self.cursor_y -= 1
-                self.cursor_x = min(self.cursor_x, len(self.lines[self.cursor_y]))
-
-        def move_cursor_down(self):
-            if self.cursor_y < len(self.lines) - 1:
-                self.cursor_y += 1
-                self.cursor_x = min(self.cursor_x, len(self.lines[self.cursor_y]))
-
-        def handle_input(self, key):
-            try:
-                self.KEYS_BIND[key]()
-            except KeyError:
-                pass
-
-            self.adjust_view()
-
-        def adjust_view(self):
-            height, width = self.stdscr.getmaxyx()
-            if self.cursor_y < self.top_line:
-                self.top_line = self.cursor_y
-            elif self.cursor_y >= self.top_line + height - 2:
-                self.top_line = self.cursor_y - height + 3
-
-            if self.cursor_x < self.left_margin:
-                self.left_margin = max(0, self.cursor_x - 5)
-            elif self.cursor_x >= self.left_margin:
-                self.left_margin = self.cursor_x - 5
-
         def display(self) -> None:
             height, width = self.stdscr.getmaxyx()
             self.stdscr.clear()
@@ -322,6 +257,34 @@ class Engine:
             self.stdscr.addstr(height - 1, 0, self.down_bar, curses.A_REVERSE)
 
             self.stdscr.refresh()
+
+    class Fonts:
+        def __init__(self, core_class_instance, fonts_folder: str ="fonts"):
+            pygame.font.init()
+            self.core = core_class_instance
+            self._load_fonts(str(fonts_folder))
+
+        def _load_fonts(self, folder_path):
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+                print(f"Created fonts folder: {folder_path}")
+                return
+
+            font_extensions = (".ttf", ".otf")
+
+            for filename in os.listdir(folder_path):
+                if filename.lower().endswith(font_extensions):
+                    font_name = os.path.splitext(filename)[0]
+                    font_path = os.path.join(folder_path, filename)
+                    try:
+                        setattr(self, font_name, pygame.font.Font(font_path, int(self.core.config.WINDOW_WIDTH / 100)))
+                        self.core.console_.print(f"Loaded font: {font_name}")
+                    except Exception as e:
+                        self.core.console_.print(f"ERROR loading font: '{e}', loading default system font...")
+                        setattr(self, font_name, pygame.font.SysFont(None, int(self.core.config.WINDOW_WIDTH / 100)))
+
+    def render_inside_console(self):
+        pass
 
     def add_game_object(self, obj: Actor):
         self.game_objects.append(obj)
@@ -355,7 +318,6 @@ class Engine:
                     self.player.rotate(x_offset, y_offset)
 
         keys = pygame.key.get_pressed()
-
 
         if keys[pygame.K_w]:
             self.player.move(self.player.front * 0.1, self.game_objects)

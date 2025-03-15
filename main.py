@@ -37,19 +37,24 @@ small_planet = Actor(
 game.add_game_object(small_planet)
 
 orbit_radius = 16
-orbit_speed = 1
+simulating_speed = 1
 angle = 0
+rotation_angle = 0
 
 def update_planet_orbit():
     global angle
-    angle += orbit_speed / 170
+    global rotation_angle
+    angle += simulating_speed / 170
     x = math.cos(angle) * orbit_radius
     z = math.sin(angle) * orbit_radius
     small_planet.position = Vector3(x, 0, z)
 
+    rotation_angle += simulating_speed
+    small_planet.rotation = Vector3(0, rotation_angle, 20)
+
 def update_fps_hud():
     hud = HUD(
-        font_class=game.default_font,
+        font_class=game.fonts.default,
         text=f"FPS: {game.clock.get_fps():.1f}",
         color=(255, 255, 255),
         position=(200, 150)
@@ -58,7 +63,7 @@ def update_fps_hud():
 
 def update_player_pos_hud():
     hud = HUD(
-        font_class=game.default_font,
+        font_class=game.fonts.default_2,
         text=f"Player pos: {player.position}",
         color=(255, 255, 255),
         position=(200, 170)
