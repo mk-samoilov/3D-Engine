@@ -48,7 +48,7 @@ game.add_game_object(big_planet)
 
 orbit_radius = 16
 orbit_radius_2 = 23
-simulating_speed = 1
+simulating_speed = 0.7
 angle_1 = 0
 rotation_angle_1 = 0
 angle_2 = 11

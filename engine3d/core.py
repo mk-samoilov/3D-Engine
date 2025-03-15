@@ -350,7 +350,7 @@ class Engine:
         glDisable(GL_LIGHTING)
 
         font = self.fonts.default_2
-        text_surface = font.render("Loading scene and assets...", True, (255, 255, 255))
+        text_surface = font.render("Loading scene and assets...", True, (255, 60, 10))
         text_data = pygame.image.tostring(text_surface, "RGBA", True)
 
         text_x = (self.config.WINDOW_WIDTH - text_surface.get_width()) // 2
