@@ -67,7 +67,7 @@ def update_planet_orbit():
 
     global angle_2
     global rotation_angle_2
-    angle_2 += simulation_speed / 200
+    angle_2 += simulation_speed / 400
     x = math.cos(angle_2) * orbit_radius_2
     z = math.sin(angle_2) * orbit_radius_2
     big_planet.position = Vector3(x, 0, z)
