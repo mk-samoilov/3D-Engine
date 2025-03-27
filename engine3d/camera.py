@@ -28,9 +28,7 @@ class Camera:
         sensitivity = 0.1
         self.yaw += x_offset * sensitivity
         self.pitch -= y_offset * sensitivity
-
         self.pitch = max(-89, min(89, self.pitch))
-
         front = Vector3()
         front.x = math.cos(math.radians(self.yaw)) * math.cos(math.radians(self.pitch))
         front.y = math.sin(math.radians(self.pitch))
@@ -46,8 +44,7 @@ class Camera:
                     self.position = closest_point + (new_position - closest_point).normalize()
                 except ValueError:
                     pass
-                finally:
-                    return
+                return
         self.position = new_position
 
     @staticmethod

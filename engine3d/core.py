@@ -7,8 +7,14 @@ import threading
 import time
 import importlib
 import curses
-import os
 import pygame
+
+import sys
+import glfw
+import imgui
+from imgui.integrations.glfw import GlfwRenderer
+
+from importlib import resources
 
 from .actor import Actor
 from .hud import HUDComponent
@@ -108,8 +114,8 @@ class PhysicsEngine:
         ]
         return min(overlap)
 
-class Engine:
-    def __init__(self, player, config: str = "config", console_inside_game: bool = True):
+class PygameBasedEngine:
+    def __init__(self, player, config: str = "config"):
         self.console_ = self.ConsoleComponent(core_class_instance=self)
         curses.wrapper(self.console_.__run__)
 
@@ -150,10 +156,7 @@ class Engine:
 
         pygame.display.set_caption(self.config.WINDOW_TITLE)
 
-        self.console_inside_game = bool(console_inside_game)
-        self.game_console_history = []
-
-        self.fonts = self.Fonts(core_class_instance=self, fonts_folder="./engine3d/fonts")
+        self.fonts = self.Fonts(core_class_instance=self)
 
         self.console_.print("Initialization OpenGL...")
 
@@ -263,29 +266,20 @@ class Engine:
             self.stdscr.refresh()
 
     class Fonts:
-        def __init__(self, core_class_instance, fonts_folder: str ="fonts"):
+        def __init__(self, core_class_instance):
             pygame.font.init()
             self.core = core_class_instance
-            self._load_fonts(str(fonts_folder))
 
-        def _load_fonts(self, folder_path):
-            if not os.path.exists(folder_path):
-                os.makedirs(folder_path)
-                print(f"Created fonts folder: {folder_path}")
-                return
-
-            font_extensions = (".ttf", ".otf")
-
-            for filename in os.listdir(folder_path):
-                if filename.lower().endswith(font_extensions):
-                    font_name = os.path.splitext(filename)[0]
-                    font_path = os.path.join(folder_path, filename)
-                    try:
-                        setattr(self, font_name, pygame.font.Font(font_path, int(self.core.config.WINDOW_WIDTH / 100)))
-                        self.core.console_.print(f"Loaded font: {font_name}")
-                    except Exception as e:
-                        self.core.console_.print(f"ERROR loading font: '{e}', loading default system font...")
-                        setattr(self, font_name, pygame.font.SysFont(None, int(self.core.config.WINDOW_WIDTH / 100)))
+        def _load_font(self, name_: str):
+            name_ = str(name_)
+            with resources.path("engine3d.fonts", name_) as font_path:
+                try:
+                    font = pygame.font.Font(font_path, int(self.core.config.WINDOW_WIDTH / 100))
+                    self.core.console_.print(f"Loaded font: {name_}")
+                    return font
+                except Exception as e:
+                    self.core.console_.print(f"ERROR loading font: '{e}', loading default system font...")
+                    return pygame.font.SysFont(None, int(self.core.config.WINDOW_WIDTH / 100))
 
     def render_inside_console(self):
         pass
@@ -349,7 +343,7 @@ class Engine:
         glDisable(GL_DEPTH_TEST)
         glDisable(GL_LIGHTING)
 
-        font = self.fonts.default_2
+        font = self.fonts._load_font("default_2.ttf")
         text_surface = font.render("Loading scene and assets...", True, (255, 60, 10))
         text_data = pygame.image.tostring(text_surface, "RGBA", True)
 
@@ -429,3 +423,180 @@ class Engine:
             self.handling = False
             self.console_.handling = False
             pygame.quit()
+
+class ImGUIBasedEngine:
+    def __init__(self, player, config: str = "config"):
+        self.config = importlib.import_module(name=str(config))
+
+        if not glfw.init():
+            sys.exit(1)
+
+        monitor = glfw.get_primary_monitor()
+        mode = glfw.get_video_mode(monitor)
+        width = mode.size.width
+        height = mode.size.height
+
+        self.window = self.init_window(width=width, height=height, title=self.config.WINDOW_TITLE, monitor=monitor)
+        glfw.make_context_current(self.window)
+
+        imgui.create_context()
+        self.impl = GlfwRenderer(self.window)
+
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_MULTISAMPLE)
+        glEnable(GL_TEXTURE_2D)
+        glEnable(GL_LIGHTING)
+        glEnable(GL_COLOR_MATERIAL)
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0)
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.0, 0.0, 0.0, 1.0])
+
+        glViewport(0, 0, width, height)
+        glMatrixMode(GL_PROJECTION)
+        gluPerspective(45, (width / height), 0.1, 1000.0)
+        glMatrixMode(GL_MODELVIEW)
+
+        self.running = True
+
+        self.custom_update_functions = []
+        self.game_objects = []
+        self.lights = []
+        self.max_lights = 8
+        self.physics_engine = PhysicsEngine()
+        self.fixed_time_step = 1 / 60
+        self.accumulated_time = 0
+        self.hud_component = HUDComponent()
+
+        self.player = player
+
+        self.last_time = glfw.get_time()
+        self.last_mouse_x = width / 2
+        self.last_mouse_y = height / 2
+        self.mouse_locked = False
+        glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_NORMAL)
+
+        texture = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, texture)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, bytes([0, 255, 255]))
+
+    def init_window(self, width: int, height: int, title: str, monitor):
+        glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
+        glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
+        glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_COMPAT_PROFILE)
+        glfw.window_hint(glfw.SAMPLES, self.config.MSAA_X)
+
+        glfw.window_hint(glfw.MAXIMIZED, glfw.TRUE)
+
+        window = glfw.create_window(width, height, title, monitor, None)
+        if not window:
+            glfw.terminate()
+            sys.exit(1)
+        return window
+
+    def handle_inputs(self):
+        if glfw.get_mouse_button(self.window, glfw.MOUSE_BUTTON_RIGHT) == glfw.PRESS and not self.mouse_locked:
+            self.mouse_locked = True
+            glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_DISABLED)
+            glfw.set_cursor_pos(self.window, self.last_mouse_x, self.last_mouse_y)
+        elif glfw.get_mouse_button(self.window, glfw.MOUSE_BUTTON_RIGHT) == glfw.RELEASE and self.mouse_locked:
+            self.mouse_locked = False
+            glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_NORMAL)
+
+        if self.mouse_locked:
+            x_, y = glfw.get_cursor_pos(self.window)
+            x_offset = x_ - self.last_mouse_x
+            y_offset = y - self.last_mouse_y
+            self.last_mouse_x = x_
+            self.last_mouse_y = y
+            self.player.rotate(x_offset, y_offset)
+
+        if glfw.get_key(self.window, glfw.KEY_W) == glfw.PRESS:
+            self.player.move(self.player.front * 0.1, self.game_objects)
+        if glfw.get_key(self.window, glfw.KEY_S) == glfw.PRESS:
+            self.player.move(-self.player.front * 0.1, self.game_objects)
+
+        if glfw.get_key(self.window, glfw.KEY_A) == glfw.PRESS:
+            self.player.move(-Vector3.cross(self.player.front, self.player.up).normalize() * 0.1, self.game_objects)
+        if glfw.get_key(self.window, glfw.KEY_D) == glfw.PRESS:
+            self.player.move(Vector3.cross(self.player.front, self.player.up).normalize() * 0.1, self.game_objects)
+
+    def add_game_object(self, obj: Actor):
+        obj.__setup_vbo__()
+
+        self.game_objects.append(obj)
+        self.physics_engine.objects.append(obj)
+
+    def remove_game_object(self, obj: Actor):
+        self.game_objects.remove(obj)
+        self.physics_engine.objects.remove(obj)
+
+    def add_update_function(self, func):
+        self.custom_update_functions.append(func)
+
+    def remove_update_function(self, func):
+        self.custom_update_functions.remove(func)
+
+    def add_light(self, light: Light):
+        if len(self.lights) < self.max_lights:
+            light.setup(GL_LIGHT0 + len(self.lights))
+            self.lights.append(light)
+            return True
+        return False
+
+    def render_3d_scene(self):
+        current_time = glfw.get_time()
+        dt = current_time - self.last_time
+        self.last_time = current_time
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glLoadIdentity()
+
+        if self.player:
+            self.player.update()
+
+        self.accumulated_time += dt
+        while self.accumulated_time >= self.fixed_time_step:
+            self.physics_engine.update(dt=self.fixed_time_step)
+            self.accumulated_time -= self.fixed_time_step
+
+        for light in self.lights:
+            light.update()
+
+        for game_object in self.game_objects:
+            game_object.render()
+
+    def render(self):
+        while not glfw.window_should_close(self.window) and self.running:
+            glfw.poll_events()
+            self.impl.process_inputs()
+
+            for func in self.custom_update_functions:
+                func()
+
+            current_time = glfw.get_time()
+            self.last_time = current_time
+
+            self.handle_inputs()
+            self.render_3d_scene()
+
+            imgui.new_frame()
+            self.draw_ui()
+
+            # self.hud_component.render_all_hud(window_width=APP_WIDTH, window_height=APP_HEIGHT)
+
+            imgui.render()
+            self.impl.render(imgui.get_draw_data())
+            glfw.swap_buffers(self.window)
+
+        self.cleanup()
+
+    def draw_ui(self):
+        pass
+
+    def cleanup(self):
+        self.impl.shutdown()
+        glfw.terminate()
+
+    def run(self):
+        self.render()

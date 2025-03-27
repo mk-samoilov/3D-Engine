@@ -10,6 +10,9 @@ blue_texture = load_texture_on_file(file="engine3d/exemple_textures/sun_texture.
 planet_texture_1 = load_texture_on_file(file="engine3d/exemple_textures/planet_texture_1.png")
 planet_texture_2 = load_texture_on_file(file="engine3d/exemple_textures/planet_texture_2.png")
 
+default_font = game.fonts._load_font("default.ttf")
+default_font_2 = game.fonts._load_font("default_2.ttf")
+
 light = Light(
     position=(0, 0, 0),
     color=(1.0, 1.0, 1.0),
@@ -48,7 +51,7 @@ game.add_game_object(big_planet)
 
 orbit_radius = 16
 orbit_radius_2 = 23
-simulating_speed = 0.7
+simulation_speed = 0.7
 angle_1 = 0
 rotation_angle_1 = 0
 angle_2 = 11
@@ -57,27 +60,27 @@ rotation_angle_2 = 7
 def update_planet_orbit():
     global angle_1
     global rotation_angle_1
-    angle_1 += simulating_speed / 170
+    angle_1 += simulation_speed / 170
     x = math.cos(angle_1) * orbit_radius
     z = math.sin(angle_1) * orbit_radius
     small_planet.position = Vector3(x, 0, z)
 
-    rotation_angle_1 += simulating_speed
+    rotation_angle_1 += simulation_speed
     small_planet.rotation = Vector3(0, rotation_angle_1, 20)
 
     global angle_2
     global rotation_angle_2
-    angle_2 += simulating_speed / 200
+    angle_2 += simulation_speed / 200
     x = math.cos(angle_2) * orbit_radius_2
     z = math.sin(angle_2) * orbit_radius_2
     big_planet.position = Vector3(x, 0, z)
 
-    rotation_angle_2 += simulating_speed
+    rotation_angle_2 += simulation_speed
     big_planet.rotation = Vector3(0, rotation_angle_2, 20)
 
 def update_fps_hud():
     hud = HUD(
-        font_class=game.fonts.default,
+        font_class=default_font,
         text=f"FPS: {game.clock.get_fps():.1f}",
         color=(255, 255, 255),
         position=(200, 150)
@@ -86,7 +89,7 @@ def update_fps_hud():
 
 def update_player_pos_hud():
     hud = HUD(
-        font_class=game.fonts.default_2,
+        font_class=default_font_2,
         text=f"Player pos: {player.position}",
         color=(255, 255, 255),
         position=(200, 170)
