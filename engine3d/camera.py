@@ -7,13 +7,14 @@ from OpenGL.GLU import *
 from engine3d.actor import Actor
 
 class Camera:
-    def __init__(self, position: Tuple, collision: bool):
+    def __init__(self, position: Tuple, collision: bool, camera_move_speed: float = 1):
         self.position = Vector3(position)
         self.front = Vector3(0, 0, -1)
         self.up = Vector3(0, 1, 0)
         self.yaw = -90
         self.pitch = 0
         self.collision = collision
+        self.camera_move_speed = float(camera_move_speed / 4)
 
     def update(self):
         gluLookAt(

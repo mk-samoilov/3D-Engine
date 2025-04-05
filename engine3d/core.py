@@ -3,21 +3,15 @@ from pygame.math import Vector3
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-import threading
-import time
 import importlib
-import curses
-import pygame
 
 import sys
 import glfw
 import imgui
 from imgui.integrations.glfw import GlfwRenderer
 
-from importlib import resources
-
 from .actor import Actor
-from .hud import HUDComponent
+# from .hud import HUDComponent # Soon.
 from .light import Light
 
 class PhysicsEngine:
@@ -114,317 +108,7 @@ class PhysicsEngine:
         ]
         return min(overlap)
 
-class PygameBasedEngine:
-    def __init__(self, player, config: str = "config"):
-        self.console_ = self.ConsoleComponent(core_class_instance=self)
-        curses.wrapper(self.console_.__run__)
-
-        self.console_.print("Initialization Engine3D...")
-
-        self.config = importlib.import_module(name=str(config))
-
-        self.last_mouse = (0, 0, 0)
-        self.unlocked_rotation_camera = False
-
-        pygame.init()
-        pygame.font.init()
-
-        pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLEBUFFERS, 1)
-        pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLESAMPLES, self.config.MSAA_X)
-        pygame.display.gl_set_attribute(pygame.GL_DEPTH_SIZE, 24)
-        pygame.display.gl_set_attribute(pygame.GL_STENCIL_SIZE, self.config.MSAA_X)
-        pygame.display.gl_set_attribute(pygame.GL_ALPHA_SIZE, self.config.MSAA_X)
-        pygame.display.gl_set_attribute(pygame.GL_DOUBLEBUFFER, 1)
-
-        self.handling = True
-
-        self.display = pygame.display.set_mode(
-            (
-                self.config.WINDOW_WIDTH,
-                self.config.WINDOW_HEIGHT
-            ), pygame.OPENGL | pygame.DOUBLEBUF)
-
-        pygame.display.set_icon(pygame.image.load(self.config.WINDOW_ICON))
-
-        self.custom_update_functions = []
-
-        self.clock = pygame.time.Clock()
-        self.player = player
-        self.game_objects = []
-        self.lights = []
-        self.max_lights = 8
-
-        pygame.display.set_caption(self.config.WINDOW_TITLE)
-
-        self.fonts = self.Fonts(core_class_instance=self)
-
-        self.console_.print("Initialization OpenGL...")
-
-        glEnable(GL_DEPTH_TEST)
-        glEnable(GL_TEXTURE_2D)
-        glEnable(GL_MULTISAMPLE)
-        glEnable(GL_LINE_SMOOTH)
-        glEnable(GL_POLYGON_SMOOTH)
-        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
-
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        glViewport(0, 0, self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT)
-        glMatrixMode(GL_PROJECTION)
-        gluPerspective(45, (self.config.WINDOW_WIDTH / self.config.WINDOW_HEIGHT), 0.1, self.config.DRAW_DISTANCE)
-        glMatrixMode(GL_MODELVIEW)
-
-        glEnable(GL_LIGHTING)
-        glEnable(GL_LIGHT7)
-        glEnable(GL_COLOR_MATERIAL)
-        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0)
-
-        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.0, 0.0, 0.0, 1.0])
-
-        self.render_loading_screen()
-
-        self.console_.print("Initialization HUD component...")
-
-        self.hud_component = HUDComponent()
-
-        self.console_.print("Initialization PhysicsEngine component...")
-
-        self.physics_engine = PhysicsEngine()
-        self.fixed_time_step = 1 / 60
-        self.accumulated_time = 0
-
-        self.loading_complete = False
-
-        self.console_.print("Done loading core components.")
-
-    class ConsoleComponent:
-        def __init__(self, core_class_instance) -> None:
-            self.down_bar: str = "ENGINE3D LOGS"
-            self.lines: list = []
-
-            self.core = core_class_instance
-
-            self.top_line = 0
-            self.left_margin = 0
-
-            self.handling = True
-
-            self.COLOR_PAIRS = \
-                [
-                    {"pair-code": 1, "text": curses.COLOR_BLUE, "background": curses.COLOR_BLACK},
-                    {"pair-code": 2, "text": curses.COLOR_GREEN, "background": curses.COLOR_BLACK},
-                    {"pair-code": 3, "text": curses.COLOR_YELLOW, "background": curses.COLOR_BLACK},
-                    {"pair-code": 4, "text": curses.COLOR_CYAN, "background": curses.COLOR_BLACK}
-                ]
-
-        def __run__(self, stdscr) -> None:
-            self.stdscr = stdscr
-            self.stdscr.clear()
-
-            curses.curs_set(0)
-
-            curses.start_color()
-            for pair in self.COLOR_PAIRS:
-                curses.init_pair(pair["pair-code"], pair["text"], pair["background"])
-
-            threading.Thread(target=self.loop).start()
-
-        def loop(self) -> None:
-            try:
-                while self.handling:
-                    self.display()
-                    time.sleep(0.1)
-            except KeyboardInterrupt: pass
-            finally:
-                self.handling = False
-                self.core.handling = False
-
-        def print(self, string: str) -> None:
-            self.lines.append(str(string))
-            height, _ = self.stdscr.getmaxyx()
-            visible_height = height - 1
-            if self.top_line + visible_height >= len(self.lines) - 1:
-                self.top_line = max(0, len(self.lines) - visible_height)
-
-        def display(self) -> None:
-            height, width = self.stdscr.getmaxyx()
-            self.stdscr.clear()
-
-            for y, line in enumerate(self.lines[self.top_line:self.top_line + height - 1]):
-                if y == height - 1:
-                    break
-
-                visible_line = line[self.left_margin:self.left_margin + width]
-                self.stdscr.addstr(y, 0, visible_line)
-
-            self.stdscr.addstr(height - 1, 0, self.down_bar, curses.A_REVERSE)
-
-            self.stdscr.refresh()
-
-    class Fonts:
-        def __init__(self, core_class_instance):
-            pygame.font.init()
-            self.core = core_class_instance
-
-        def _load_font(self, name_: str):
-            name_ = str(name_)
-            with resources.path("engine3d.fonts", name_) as font_path:
-                try:
-                    font = pygame.font.Font(font_path, int(self.core.config.WINDOW_WIDTH / 100))
-                    self.core.console_.print(f"Loaded font: {name_}")
-                    return font
-                except Exception as e:
-                    self.core.console_.print(f"ERROR loading font: '{e}', loading default system font...")
-                    return pygame.font.SysFont(None, int(self.core.config.WINDOW_WIDTH / 100))
-
-    def render_inside_console(self):
-        pass
-
-    def add_game_object(self, obj: Actor):
-        self.game_objects.append(obj)
-        self.physics_engine.objects.append(obj)
-
-    def remove_game_object(self, obj: Actor):
-        self.game_objects.remove(obj)
-        self.physics_engine.objects.remove(obj)
-
-    def add_light(self, light: Light):
-        if len(self.lights) < self.max_lights:
-            light.setup(GL_LIGHT0 + len(self.lights))
-            self.lights.append(light)
-            return True
-        return False
-
-    def handle_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 3:
-                    self.unlocked_rotation_camera = True
-                    pygame.mouse.get_rel()
-            elif event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 3:
-                    self.unlocked_rotation_camera = False
-            elif event.type == pygame.MOUSEMOTION:
-                if self.unlocked_rotation_camera:
-                    x_offset, y_offset = pygame.mouse.get_rel()
-                    self.player.rotate(x_offset, y_offset)
-
-        keys = pygame.key.get_pressed()
-
-        if keys[pygame.K_w]:
-            self.player.move(self.player.front * 0.1, self.game_objects)
-        if keys[pygame.K_s]:
-            self.player.move(-self.player.front * 0.1, self.game_objects)
-        if keys[pygame.K_a]:
-            self.player.move(-Vector3.cross(self.player.front, self.player.up).normalize() * 0.1, self.game_objects)
-        if keys[pygame.K_d]:
-            self.player.move(Vector3.cross(self.player.front, self.player.up).normalize() * 0.1, self.game_objects)
-
-        return True
-
-    def render_loading_screen(self):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        glOrtho(0, self.config.WINDOW_WIDTH, 0, self.config.WINDOW_HEIGHT, -1, 1)
-
-        glMatrixMode(GL_MODELVIEW)
-        glPushMatrix()
-        glLoadIdentity()
-
-        glDisable(GL_DEPTH_TEST)
-        glDisable(GL_LIGHTING)
-
-        font = self.fonts._load_font("default_2.ttf")
-        text_surface = font.render("Loading scene and assets...", True, (255, 60, 10))
-        text_data = pygame.image.tostring(text_surface, "RGBA", True)
-
-        text_x = (self.config.WINDOW_WIDTH - text_surface.get_width()) // 2
-        text_y = (self.config.WINDOW_HEIGHT - text_surface.get_height()) // 2
-
-        glRasterPos2f(text_x, text_y)
-        glDrawPixels(
-            text_surface.get_width(),
-            text_surface.get_height(),
-            GL_RGBA, GL_UNSIGNED_BYTE, text_data
-        )
-
-        glEnable(GL_DEPTH_TEST)
-        glEnable(GL_LIGHTING)
-        glMatrixMode(GL_PROJECTION)
-        glPopMatrix()
-        glMatrixMode(GL_MODELVIEW)
-        glPopMatrix()
-
-        pygame.display.flip()
-
-    def load_all_objects(self):
-        for obj in self.game_objects:
-            obj.__setup_vbo__()
-            self.console_.print(f"Loaded object at {obj.position}")
-
-        self.loading_complete = True
-        self.console_.print("Scene and assets loaded.")
-
-    def add_update_function(self, func):
-        self.custom_update_functions.append(func)
-
-    def remove_update_function(self, func):
-        self.custom_update_functions.remove(func)
-
-    def update(self):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glLoadIdentity()
-        self.player.update()
-
-        dt = self.clock.get_time() / 1000.0
-        self.accumulated_time += dt
-
-        while self.accumulated_time >= self.fixed_time_step:
-            self.physics_engine.update(dt=self.fixed_time_step)
-            self.accumulated_time -= self.fixed_time_step
-
-        for light in self.lights:
-            light.update()
-
-        for game_object in self.game_objects:
-            game_object.render()
-
-        for func in self.custom_update_functions:
-            func()
-
-        self.hud_component.render_all_hud(
-            window_width=self.config.WINDOW_WIDTH,
-            window_height=self.config.WINDOW_HEIGHT
-        )
-
-        pygame.display.flip()
-        self.clock.tick(60)
-
-    def run(self):
-        try:
-            while not self.loading_complete:
-                self.load_all_objects()
-                pygame.event.pump()
-
-            while self.handling and self.handle_events():
-                self.update()
-        except KeyboardInterrupt:
-            pass
-        finally:
-            self.handling = False
-            self.console_.handling = False
-            pygame.quit()
-
-class ImGUIBasedEngine:
+class Engine3D:
     def __init__(self, player, config: str = "config"):
         self.config = importlib.import_module(name=str(config))
 
@@ -457,6 +141,8 @@ class ImGUIBasedEngine:
         gluPerspective(45, (width / height), 0.1, 1000.0)
         glMatrixMode(GL_MODELVIEW)
 
+        self.frame_time = 1.0 / self.config.TARGET_FPS
+
         self.running = True
 
         self.custom_update_functions = []
@@ -466,7 +152,7 @@ class ImGUIBasedEngine:
         self.physics_engine = PhysicsEngine()
         self.fixed_time_step = 1 / 60
         self.accumulated_time = 0
-        self.hud_component = HUDComponent()
+        # self.hud_component = HUDComponent() # Soon.
 
         self.player = player
 
@@ -512,14 +198,14 @@ class ImGUIBasedEngine:
             self.player.rotate(x_offset, y_offset)
 
         if glfw.get_key(self.window, glfw.KEY_W) == glfw.PRESS:
-            self.player.move(self.player.front * 0.1, self.game_objects)
+            self.player.move(self.player.front * self.player.camera_move_speed, self.game_objects)
         if glfw.get_key(self.window, glfw.KEY_S) == glfw.PRESS:
-            self.player.move(-self.player.front * 0.1, self.game_objects)
+            self.player.move(-self.player.front * self.player.camera_move_speed, self.game_objects)
 
         if glfw.get_key(self.window, glfw.KEY_A) == glfw.PRESS:
-            self.player.move(-Vector3.cross(self.player.front, self.player.up).normalize() * 0.1, self.game_objects)
+            self.player.move(-Vector3.cross(self.player.front, self.player.up).normalize() * self.player.camera_move_speed, self.game_objects)
         if glfw.get_key(self.window, glfw.KEY_D) == glfw.PRESS:
-            self.player.move(Vector3.cross(self.player.front, self.player.up).normalize() * 0.1, self.game_objects)
+            self.player.move(Vector3.cross(self.player.front, self.player.up).normalize() * self.player.camera_move_speed, self.game_objects)
 
     def add_game_object(self, obj: Actor):
         obj.__setup_vbo__()
@@ -568,6 +254,8 @@ class ImGUIBasedEngine:
 
     def render(self):
         while not glfw.window_should_close(self.window) and self.running:
+            frame_start_time = glfw.get_time()
+
             glfw.poll_events()
             self.impl.process_inputs()
 
@@ -588,6 +276,14 @@ class ImGUIBasedEngine:
             imgui.render()
             self.impl.render(imgui.get_draw_data())
             glfw.swap_buffers(self.window)
+
+            frame_end_time = glfw.get_time()
+            elapsed_time = frame_end_time - frame_start_time
+            remaining_time = self.frame_time - elapsed_time
+
+            if remaining_time > 0:
+                while glfw.get_time() - frame_start_time < self.frame_time:
+                    pass
 
         self.cleanup()
 

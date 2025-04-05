@@ -5,3 +5,4 @@ WINDOW_ICON = "./engine3d/engine-icon.png"
 
 DRAW_DISTANCE = 1000
 MSAA_X = 8
+TARGET_FPS = 80

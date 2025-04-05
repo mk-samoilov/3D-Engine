@@ -1,9 +1,7 @@
 import os
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
-from .core import PygameBasedEngine, ImGUIBasedEngine
-
-Engine = PygameBasedEngine
+from .core import Engine3D
 
 from .camera import Camera
 from .actor import Actor
