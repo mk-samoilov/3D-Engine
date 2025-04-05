@@ -11,7 +11,7 @@ import imgui
 from imgui.integrations.glfw import GlfwRenderer
 
 from .actor import Actor
-# from .hud import HUDComponent # Soon.
+from .hud import HUDComponent
 from .light import Light
 
 class PhysicsEngine:
@@ -142,6 +142,7 @@ class Engine3D:
         glMatrixMode(GL_MODELVIEW)
 
         self.frame_time = 1.0 / self.config.TARGET_FPS
+        self._frame_start_time = None
 
         self.running = True
 
@@ -152,7 +153,7 @@ class Engine3D:
         self.physics_engine = PhysicsEngine()
         self.fixed_time_step = 1 / 60
         self.accumulated_time = 0
-        # self.hud_component = HUDComponent() # Soon.
+        self.hud_component = HUDComponent()
 
         self.player = player
 
@@ -254,7 +255,7 @@ class Engine3D:
 
     def render(self):
         while not glfw.window_should_close(self.window) and self.running:
-            frame_start_time = glfw.get_time()
+            self._frame_start_time = glfw.get_time()
 
             glfw.poll_events()
             self.impl.process_inputs()
@@ -271,18 +272,19 @@ class Engine3D:
             imgui.new_frame()
             self.draw_ui()
 
-            # self.hud_component.render_all_hud(window_width=APP_WIDTH, window_height=APP_HEIGHT)
+            width, height = glfw.get_window_size(self.window)
+            self.hud_component.render_all_hud(window_width=width, window_height=height)
 
             imgui.render()
             self.impl.render(imgui.get_draw_data())
             glfw.swap_buffers(self.window)
 
             frame_end_time = glfw.get_time()
-            elapsed_time = frame_end_time - frame_start_time
+            elapsed_time = frame_end_time - self._frame_start_time
             remaining_time = self.frame_time - elapsed_time
 
             if remaining_time > 0:
-                while glfw.get_time() - frame_start_time < self.frame_time:
+                while glfw.get_time() - self._frame_start_time < self.frame_time:
                     pass
 
         self.cleanup()

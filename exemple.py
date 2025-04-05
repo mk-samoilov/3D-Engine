@@ -1,10 +1,45 @@
-from engine3d import Engine3D, Actor, Camera, Light, load_texture_on_file
+from engine3d import Engine3D, Actor, Camera, Light, BaseHUDElement, load_texture_on_file
 from engine3d.meshes import gen_sphere
+
 from pygame import Vector3
+
 import math
+import imgui
 
 player = Camera((5, 5, 40), collision=True)
 game = Engine3D(player=player)
+
+import glfw
+
+class FPSCounter(BaseHUDElement):
+    def __init__(self, name: str, position: tuple = (10, 10)):
+        super().__init__(name)
+        self.position = position
+        self.fps = 0
+        self.frame_count = 0
+        self.last_time = glfw.get_time()
+        self.update_interval = 0.5
+
+    def update_fps(self):
+        current_time = glfw.get_time()
+        self.frame_count += 1
+
+        time_elapsed = current_time - self.last_time
+        if time_elapsed >= self.update_interval:
+            self.fps = int(self.frame_count / time_elapsed)
+            self.frame_count = 0
+            self.last_time = current_time
+
+    def render(self, *args):
+        if not self.visible:
+            return
+
+        imgui.set_next_window_position(*self.position)
+        imgui.begin(self.name, imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_RESIZE | imgui.WINDOW_ALWAYS_AUTO_RESIZE)
+        imgui.text(f"FPS: {self.fps}")
+        imgui.end()
+
+fps_counter = FPSCounter(name="fps")
 
 blue_texture = load_texture_on_file(file="engine3d/exemple_textures/sun_texture.png")
 planet_texture_1 = load_texture_on_file(file="engine3d/exemple_textures/planet_texture_1.png")
@@ -54,6 +89,9 @@ rotation_angle_1 = 0
 angle_2 = 11
 rotation_angle_2 = 7
 
+def update_fps_counter():
+    fps_counter.update_fps()
+
 def update_planet_orbit():
     global angle_1
     global rotation_angle_1
@@ -75,6 +113,9 @@ def update_planet_orbit():
     rotation_angle_2 += simulation_speed
     big_planet.rotation = Vector3(0, rotation_angle_2, 20)
 
+game.hud_component.add_element(fps_counter)
+
+game.add_update_function(func=update_fps_counter)
 game.add_update_function(func=update_planet_orbit)
 
 game.run()
