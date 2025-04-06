@@ -1,4 +1,4 @@
-from engine3d import Engine3D, Actor, Camera, Light, BaseHUDElement, load_texture_on_file
+from engine3d import Engine3D, Actor, Camera, Light, HUDWindow, load_texture_on_file
 from engine3d.meshes import gen_sphere
 
 from pygame import Vector3
@@ -11,10 +11,10 @@ game = Engine3D(player=player)
 
 import glfw
 
-class FPSCounter(BaseHUDElement):
-    def __init__(self, name: str, position: tuple = (10, 10)):
-        super().__init__(name)
-        self.position = position
+class FPSCounter(HUDWindow):
+    def __init__(self):
+        super().__init__()
+
         self.fps = 0
         self.frame_count = 0
         self.last_time = glfw.get_time()
@@ -31,19 +31,20 @@ class FPSCounter(BaseHUDElement):
             self.last_time = current_time
 
     def render(self, *args):
-        if not self.visible:
-            return
-
         imgui.set_next_window_position(*self.position)
-        imgui.begin(self.name, imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_RESIZE | imgui.WINDOW_ALWAYS_AUTO_RESIZE)
-        imgui.text(f"FPS: {self.fps}")
-        imgui.end()
+        if self.visible:
+            imgui.begin(
+                "FPS",
+                flags=imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_RESIZE | imgui.WINDOW_ALWAYS_AUTO_RESIZE
+            )
+            imgui.text(f"FPS: {self.fps}")
+            imgui.end()
 
-fps_counter = FPSCounter(name="fps")
+fps_counter = FPSCounter()
 
-blue_texture = load_texture_on_file(file="engine3d/exemple_textures/sun_texture.png")
-planet_texture_1 = load_texture_on_file(file="engine3d/exemple_textures/planet_texture_1.png")
-planet_texture_2 = load_texture_on_file(file="engine3d/exemple_textures/planet_texture_2.png")
+blue_texture = load_texture_on_file(file="exemple_textures/sun_texture.png")
+planet_texture_1 = load_texture_on_file(file="exemple_textures/planet_texture_1.png")
+planet_texture_2 = load_texture_on_file(file="exemple_textures/planet_texture_2.png")
 
 light = Light(
     position=(0, 0, 0),

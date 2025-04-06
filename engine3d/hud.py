@@ -1,8 +1,8 @@
-import imgui
+from typing import List
 
 class HUDComponent:
     def __init__(self):
-        self.elements = []
+        self.elements: List[BaseHUDElement] = []
         self.visible = True
 
     def add_element(self, element):
@@ -23,16 +23,15 @@ class HUDComponent:
         self.visible = not self.visible
 
 class BaseHUDElement:
-    def __init__(self, name: str):
-        self.name = name
+    def __init__(self):
         self.visible = True
 
     def render(self, window_width, window_height):
         pass
 
 class HUDWindow(BaseHUDElement):
-    def __init__(self, name: str, position: tuple = (10, 10), size: tuple = (300, 200), callback=None):
-        super().__init__(name)
+    def __init__(self, position: tuple = (10, 10), size: tuple = (300, 200), callback=None):
+        super().__init__()
         self.position = position
         self.size = size
         self.callback = callback
@@ -41,11 +40,4 @@ class HUDWindow(BaseHUDElement):
         if not self.visible:
             return
 
-        imgui.set_next_window_position(*self.position)
-        imgui.set_next_window_size(*self.size)
-        if imgui.begin(self.name, closable=True):
-            if self.callback:
-                self.callback()
-            else:
-                imgui.text(f"Default content for {self.name}")
-        imgui.end()
+        pass # ImGUI HUD Element render logic
