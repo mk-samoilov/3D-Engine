@@ -22,7 +22,6 @@ class HUDComponent:
     def toggle_visibility(self):
         self.visible = not self.visible
 
-
 class BaseHUDElement:
     def __init__(self, name: str):
         self.name = name
