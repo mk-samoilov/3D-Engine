@@ -1,4 +1,4 @@
-from engine3d import Engine3D, Actor, Camera, Light, HUDWindow, load_texture_on_file
+from engine3d import Engine3D, Actor, Camera, Light, HUDElement, load_texture_on_file
 from engine3d.meshes import gen_sphere
 
 from pygame import Vector3
@@ -11,7 +11,7 @@ game = Engine3D(player=player)
 
 import glfw
 
-class FPSCounter(HUDWindow):
+class FPSCounter(HUDElement):
     def __init__(self):
         super().__init__()
 

@@ -29,7 +29,7 @@ class BaseHUDElement:
     def render(self, window_width, window_height):
         pass
 
-class HUDWindow(BaseHUDElement):
+class HUDElement(BaseHUDElement):
     def __init__(self, position: tuple = (10, 10), size: tuple = (300, 200), callback=None):
         super().__init__()
         self.position = position
