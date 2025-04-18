@@ -6,8 +6,5 @@ Pillow~=11.0.0
 imgui~=2.0.0
 glfw~=2.8.0
 
-# ADDITIONALLY FOR WINDOWS:
-# windows-curses~=2.4.1
-
 # FOR BUILDING BINARY FILES:
 # pyinstaller~=6.12.0
