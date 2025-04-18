@@ -1,6 +1,9 @@
 import numpy as np
+
 from pygame.math import Vector3
 from OpenGL.GL import *
+
+from .methods import gen_base_texture
 
 class Actor:
     def __init__(self, position, rotation, mesh, texture, collision: bool, physic: bool = False, mass: float = 1.0, restitution: float = 0.5):
@@ -18,7 +21,7 @@ class Actor:
         self.vertices = np.array(mesh.vertices, dtype=np.float32)
         self.faces = np.array(mesh.faces, dtype=np.int32)
         self.uvs = np.array(mesh.uvs, dtype=np.float32)
-        self.texture = texture
+        self.texture = texture if texture else gen_base_texture()
         self.bounding_box = self.calculate_bounding_box()
         self.collision = collision
         self.normals = self.calculate_normals()

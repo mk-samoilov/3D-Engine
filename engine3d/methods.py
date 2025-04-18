@@ -27,3 +27,21 @@ def load_texture_on_file(file: str):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
     return texture_id
+
+def gen_base_texture():
+    texture_id = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, texture_id)
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0, GL_RGB,
+        1,
+        1,
+        0,
+        GL_RGB,
+        GL_UNSIGNED_BYTE,
+        bytes(
+            [0, 255, 180]
+        )
+    )
+
+    return texture_id

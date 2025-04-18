@@ -42,7 +42,7 @@ class FPSCounter(HUDElement):
 
 fps_counter = FPSCounter()
 
-blue_texture = load_texture_on_file(file="exemple_textures/sun_texture.png")
+sun_texture = load_texture_on_file(file="exemple_textures/sun_texture.png")
 planet_texture_1 = load_texture_on_file(file="exemple_textures/planet_texture_1.png")
 planet_texture_2 = load_texture_on_file(file="exemple_textures/planet_texture_2.png")
 
@@ -59,7 +59,7 @@ sun_actor = Actor(
     position=(0, 0, 0),
     rotation=(0, 0, 0),
     mesh=gen_sphere(radius=3.1, segments=64),
-    texture=blue_texture,
+    texture=sun_texture,
     collision=True
 )
 game.add_game_object(sun_actor)
@@ -67,7 +67,7 @@ game.add_game_object(sun_actor)
 small_planet = Actor(
     position=(0, 0, 16),
     rotation=(0, 0, 0),
-    mesh=gen_sphere(radius=0.8, segments=128),
+    mesh=gen_sphere(radius=0.8, segments=256),
     texture=planet_texture_1,
     collision=True
 )
@@ -76,7 +76,7 @@ game.add_game_object(small_planet)
 big_planet = Actor(
     position=(0, 0, 23),
     rotation=(0, 0, 0),
-    mesh=gen_sphere(radius=1.6, segments=256),
+    mesh=gen_sphere(radius=1.6, segments=512),
     texture=planet_texture_2,
     collision=True
 )
