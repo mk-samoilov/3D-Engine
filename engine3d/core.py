@@ -14,6 +14,7 @@ from .actor import Actor
 from .hud import HUDComponent
 from .light import Light
 
+
 class PhysicsEngine:
     def __init__(self, gravity: Vector3 = Vector3(0, 0, 0)): # Vector3(0, -9.8, 0) - earth gravity
         self.gravity = gravity
@@ -107,6 +108,7 @@ class PhysicsEngine:
             for i in range(3)
         ]
         return min(overlap)
+
 
 class Engine3D:
     def __init__(self, player, config: str = "config"):

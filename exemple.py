@@ -90,12 +90,15 @@ rotation_angle_1 = 0
 angle_2 = 11
 rotation_angle_2 = 7
 
+
 def update_fps_counter():
     fps_counter.update_fps()
+
 
 def update_planet_orbit():
     global angle_1
     global rotation_angle_1
+
     angle_1 += simulation_speed / 90
     x = math.cos(angle_1) * orbit_radius
     z = math.sin(angle_1) * orbit_radius
@@ -106,6 +109,7 @@ def update_planet_orbit():
 
     global angle_2
     global rotation_angle_2
+
     angle_2 += simulation_speed / 270
     x = math.cos(angle_2) * orbit_radius_2
     z = math.sin(angle_2) * orbit_radius_2
@@ -113,6 +117,7 @@ def update_planet_orbit():
 
     rotation_angle_2 += simulation_speed
     big_planet.rotation = Vector3(0, rotation_angle_2, 20)
+
 
 game.hud_component.add_element(fps_counter)
 

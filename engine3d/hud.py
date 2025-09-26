@@ -1,5 +1,6 @@
 from typing import List
 
+
 class HUDComponent:
     def __init__(self):
         self.elements: List[BaseHUDElement] = []
