@@ -1,1 +1,1 @@
-### Lasted doc - `dec_series_1.md` [Outdated]
+### Lasted doc - `doc_series1_outdated.md` [Outdated]
