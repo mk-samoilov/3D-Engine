@@ -133,14 +133,14 @@ class ControlWindow(HUDElement):
 
 control_window = ControlWindow(fps_counter, game)
 
-game.update_loading_progress(0.2, "Loading assents (assets/textures/sun_texture_v2.png)")
-sun_texture = load_texture_on_file(file="assets/textures/sun_texture_v2.png")
+game.update_loading_progress(0.2, "Loading assents (assets/textures/sun_texture.png)")
+sun_texture = load_texture_on_file(file="assets/textures/sun_texture.png")
 
-game.update_loading_progress(0.3, "Loading assents (assets/textures/earth_planet_texture_v2.png)")
-planet_texture_1 = load_texture_on_file(file="assets/textures/earth_planet_texture_v2.png")
+game.update_loading_progress(0.3, "Loading assents (assets/textures/earth_planet_texture.png)")
+earth_texture = load_texture_on_file(file="assets/textures/earth_planet_texture.png")
 
-game.update_loading_progress(0.3, "Loading assents (assets/textures/mars_planet_texture_v2.png)")
-planet_texture_2 = load_texture_on_file(file="assets/textures/mars_planet_texture_v2.png")
+game.update_loading_progress(0.3, "Loading assents (assets/textures/mars_planet_texture.png)")
+mars_texture_2 = load_texture_on_file(file="assets/textures/mars_planet_texture.png")
 
 
 game.update_loading_progress(0.5, "Loading scene (lights)")
@@ -168,7 +168,7 @@ earth_planet = Actor(
     position=(0, 0, 16),
     rotation=(0, 0, 0),
     mesh=gen_sphere(radius=0.8, segments=256),
-    texture=planet_texture_1,
+    texture=earth_texture,
     collision=True
 )
 game.add_game_object(earth_planet)
@@ -178,7 +178,7 @@ mars_planet = Actor(
     position=(0, 0, 23),
     rotation=(0, 0, 0),
     mesh=gen_sphere(radius=1.6, segments=512),
-    texture=planet_texture_2,
+    texture=mars_texture_2,
     collision=True
 )
 game.add_game_object(mars_planet)
