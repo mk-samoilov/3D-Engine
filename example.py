@@ -140,7 +140,7 @@ game.update_loading_progress(0.3, "Loading assents (assets/textures/earth_planet
 earth_texture = load_texture_on_file(file="assets/textures/earth_planet_texture.png")
 
 game.update_loading_progress(0.3, "Loading assents (assets/textures/mars_planet_texture.png)")
-mars_texture_2 = load_texture_on_file(file="assets/textures/mars_planet_texture.png")
+mars_texture = load_texture_on_file(file="assets/textures/mars_planet_texture.png")
 
 
 game.update_loading_progress(0.5, "Loading scene (lights)")
@@ -163,22 +163,22 @@ sun_actor = Actor(
 )
 game.add_game_object(sun_actor)
 
-game.update_loading_progress(0.6, "Loading scene (actor earth_planet)")
+game.update_loading_progress(0.7, "Loading scene (actor earth_planet)")
 earth_planet = Actor(
     position=(0, 0, 16),
     rotation=(0, 0, 0),
-    mesh=gen_sphere(radius=0.8, segments=256),
+    mesh=gen_sphere(radius=0.8, segments=224),
     texture=earth_texture,
     collision=True
 )
 game.add_game_object(earth_planet)
 
-game.update_loading_progress(0.6, "Loading scene (actor mars_planet)")
+game.update_loading_progress(0.8, "Loading scene (actor mars_planet)")
 mars_planet = Actor(
     position=(0, 0, 23),
     rotation=(0, 0, 0),
-    mesh=gen_sphere(radius=1.6, segments=512),
-    texture=mars_texture_2,
+    mesh=gen_sphere(radius=1.6, segments=224),
+    texture=mars_texture,
     collision=True
 )
 game.add_game_object(mars_planet)
@@ -232,7 +232,7 @@ def update_planet_orbit():
     mars_planet.rotation = Vector3(0, rotation_angle_2, 20)
 
 
-game.update_loading_progress(0.75, "Loading engine (registering update functions and hud's)")
+game.update_loading_progress(0.9, "Loading engine (registering update functions and hud's)")
 
 game.hud_component.add_element(fps_counter)
 game.hud_component.add_element(control_window)
