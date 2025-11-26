@@ -7,7 +7,8 @@ from .methods import gen_base_texture
 
 
 class Actor:
-    def __init__(self, position, rotation, mesh, texture, collision: bool, physic: bool = False, mass: float = 1.0, restitution: float = 0.5):
+    def __init__(self, position, rotation, mesh, texture, collision: bool, physic: bool = False, mass: float = 1.0,
+                 restitution: float = 0.5):
         self.position = Vector3(position)
         self.rotation = Vector3(rotation)
         self.velocity = Vector3(0, 0, 0)
@@ -41,18 +42,14 @@ class Actor:
         num_faces = len(self.faces)
         num_vertices_per_face = 3
 
-        vertex_data = np.zeros(num_faces * num_vertices_per_face * 3, dtype=np.float32)
-        normal_data = np.zeros(num_faces * num_vertices_per_face * 3, dtype=np.float32)
-        uv_data = np.zeros(num_faces * num_vertices_per_face * 2, dtype=np.float32)
-        index_data = np.arange(num_faces * num_vertices_per_face, dtype=np.uint32)
+        faces_flat = self.faces.flatten()
 
-        for face_idx, (face, uv_face) in enumerate(zip(self.faces, self.uvs)):
-            base_idx = face_idx * num_vertices_per_face
-            for i, (vertex_id, uv) in enumerate(zip(face, uv_face)):
-                idx = base_idx + i
-                vertex_data[idx * 3:(idx + 1) * 3] = self.vertices[vertex_id]
-                normal_data[idx * 3:(idx + 1) * 3] = self.normals[vertex_id]
-                uv_data[idx * 2:(idx + 1) * 2] = uv
+        vertex_data = self.vertices[faces_flat].flatten().astype(np.float32)
+        normal_data = self.normals[faces_flat].flatten().astype(np.float32)
+
+        uv_data = self.uvs.reshape(num_faces * num_vertices_per_face, 2).flatten().astype(np.float32)
+        
+        index_data = np.arange(num_faces * num_vertices_per_face, dtype=np.uint32)
 
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         glBufferData(GL_ARRAY_BUFFER, vertex_data.nbytes, vertex_data, GL_STATIC_DRAW)
@@ -121,15 +118,15 @@ class Actor:
         return min_cords, max_cords
 
     def calculate_inertia_tensor(self):
+        x_, y, z = self.vertices[:, 0], self.vertices[:, 1], self.vertices[:, 2]
+        
         inertia = np.zeros((3, 3))
-        for vertex in self.vertices:
-            x_, y, z = vertex
-            inertia[0, 0] += y**2 + z**2
-            inertia[1, 1] += x_**2 + z**2
-            inertia[2, 2] += x_**2 + y**2
-            inertia[0, 1] -= x_ * y
-            inertia[0, 2] -= x_ * z
-            inertia[1, 2] -= y * z
+        inertia[0, 0] = np.sum(x_**2 + z**2)
+        inertia[1, 1] = np.sum(x_**2 + z**2)
+        inertia[2, 2] = np.sum(x_**2 + y**2)
+        inertia[0, 1] = -np.sum(x_ * y)
+        inertia[0, 2] = -np.sum(x_ * z)
+        inertia[1, 2] = -np.sum(y * z)
         inertia[1, 0] = inertia[0, 1]
         inertia[2, 0] = inertia[0, 2]
         inertia[2, 1] = inertia[1, 2]

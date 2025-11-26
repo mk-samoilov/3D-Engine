@@ -235,8 +235,9 @@ class Engine3D:
     def add_game_objects(self, objects: list):
         for obj in objects:
             obj.__setup_vbo__()
-            self.game_objects.append(obj)
-            self.physics_engine.objects.append(obj)
+
+        self.game_objects.extend(objects)
+        self.physics_engine.objects.extend(objects)
 
     def remove_game_object(self, obj: Actor):
         self.game_objects.remove(obj)

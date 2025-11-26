@@ -133,17 +133,17 @@ class ControlWindow(HUDElement):
 
 control_window = ControlWindow(fps_counter, game)
 
-game.update_loading_progress(0.2, "Loading assents (assets/textures/sun_texture.png)")
+game.update_loading_progress(0.3, "Loading assents (assets/textures/sun_texture.png)")
 sun_texture = load_texture_on_file(file="assets/textures/sun_texture.png")
 
-game.update_loading_progress(0.3, "Loading assents (assets/textures/earth_planet_texture.png)")
+game.update_loading_progress(0.4, "Loading assents (assets/textures/earth_planet_texture.png)")
 earth_texture = load_texture_on_file(file="assets/textures/earth_planet_texture.png")
 
-game.update_loading_progress(0.3, "Loading assents (assets/textures/mars_planet_texture.png)")
+game.update_loading_progress(0.4, "Loading assents (assets/textures/mars_planet_texture.png)")
 mars_texture = load_texture_on_file(file="assets/textures/mars_planet_texture.png")
 
 
-game.update_loading_progress(0.5, "Loading scene (lights)")
+game.update_loading_progress(0.6, "Loading scene (lights)")
 light = Light(
     position=(0, 0, 0),
     color=(1.0, 1.0, 1.0),
@@ -153,17 +153,15 @@ light = Light(
 )
 game.add_light(light)
 
-game.update_loading_progress(0.5, "Loading scene (actor sun_actor)")
+game.update_loading_progress(0.7, "Loading scene (actors)")
 sun_actor = Actor(
     position=(0, 0, 0),
     rotation=(0, 0, 0),
-    mesh=gen_sphere(radius=3.1, segments=64),
+    mesh=gen_sphere(radius=3.1, segments=128),
     texture=sun_texture,
     collision=True
 )
-game.add_game_object(sun_actor)
 
-game.update_loading_progress(0.7, "Loading scene (actor earth_planet)")
 earth_planet = Actor(
     position=(0, 0, 16),
     rotation=(0, 0, 0),
@@ -171,9 +169,7 @@ earth_planet = Actor(
     texture=earth_texture,
     collision=True
 )
-game.add_game_object(earth_planet)
 
-game.update_loading_progress(0.8, "Loading scene (actor mars_planet)")
 mars_planet = Actor(
     position=(0, 0, 23),
     rotation=(0, 0, 0),
@@ -181,7 +177,8 @@ mars_planet = Actor(
     texture=mars_texture,
     collision=True
 )
-game.add_game_object(mars_planet)
+
+game.add_game_objects([sun_actor, earth_planet, mars_planet])
 
 orbit_radius = 16
 orbit_radius_2 = 23
