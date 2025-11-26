@@ -17,7 +17,7 @@ class LoadingScreen:
         if not self.visible:
             return
 
-        window_size = (400, 150)
+        window_size = (360, 86)
         pos_x = (window_width - window_size[0]) / 2
         pos_y = (window_height - window_size[1]) / 2
         
