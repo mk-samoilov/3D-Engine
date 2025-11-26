@@ -13,6 +13,7 @@ from imgui.integrations.glfw import GlfwRenderer
 from .actor import Actor
 from .hud import HUDComponent
 from .light import Light
+from .loading_screen import LoadingScreen
 
 
 class PhysicsEngine:
@@ -156,6 +157,7 @@ class Engine3D:
         self.fixed_time_step = 1 / 60
         self.accumulated_time = 0
         self.hud_component = HUDComponent()
+        self.loading_screen = LoadingScreen()
 
         self.player = player
 
@@ -171,6 +173,16 @@ class Engine3D:
         texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, texture)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, bytes([0, 255, 255]))
+        
+        # Начальное отображение загрузочного экрана
+        self.loading_screen.set_progress(0.0)
+        self.loading_screen.set_status("Инициализация...")
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        imgui.new_frame()
+        self.loading_screen.render(window_width=width, window_height=height)
+        imgui.render()
+        self.impl.render(imgui.get_draw_data())
+        glfw.swap_buffers(self.window)
 
     def init_window(self, width: int, height: int, title: str, monitor):
         glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
@@ -278,8 +290,12 @@ class Engine3D:
 
             imgui.new_frame()
             self.draw_ui()
-
+            
+            # Рендер загрузочного экрана поверх всего
             width, height = glfw.get_window_size(self.window)
+            if self.loading_screen.visible:
+                self.loading_screen.render(window_width=width, window_height=height)
+            
             self.hud_component.render_all_hud(window_width=width, window_height=height)
 
             imgui.render()
@@ -298,6 +314,34 @@ class Engine3D:
 
     def draw_ui(self):
         pass
+    
+    def update_loading_progress(self, progress: float, status: str = "Загрузка..."):
+        """Обновить прогресс загрузки
+        
+        Args:
+            progress: Прогресс от 0.0 до 1.0
+            status: Текст статуса загрузки
+        """
+        self.loading_screen.set_progress(progress)
+        self.loading_screen.set_status(status)
+        
+        # Обновить окно для отображения прогресса
+        glfw.poll_events()
+        self.impl.process_inputs()
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        
+        imgui.new_frame()
+        width, height = glfw.get_window_size(self.window)
+        self.loading_screen.render(window_width=width, window_height=height)
+        
+        imgui.render()
+        self.impl.render(imgui.get_draw_data())
+        glfw.swap_buffers(self.window)
+    
+    def finish_loading(self):
+        """Завершить загрузку и скрыть загрузочный экран"""
+        self.loading_screen.hide()
 
     def cleanup(self):
         self.impl.shutdown()

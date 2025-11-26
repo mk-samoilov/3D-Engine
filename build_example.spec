@@ -96,4 +96,3 @@ exe = EXE(
     entitlements_file=None,
     icon='engine3d/engine-icon.png' if os.path.exists('engine3d/engine-icon.png') else None,
 )
-

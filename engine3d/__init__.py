@@ -8,5 +8,6 @@ from .camera import Camera
 from .actor import Actor
 from .hud import HUDElement, BaseHUDElement
 from .light import Light
+from .loading_screen import LoadingScreen
 
 from .methods import load_mesh_on_file, load_texture_on_file

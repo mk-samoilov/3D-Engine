@@ -10,6 +10,9 @@ import imgui
 player = Camera((5, 5, 40), collision=True)
 game = Engine3D(player=player)
 
+# Начальная настройка загрузочного экрана
+game.update_loading_progress(0.0, "Инициализация движка...")
+
 
 import glfw
 
@@ -52,11 +55,17 @@ class FPSCounter(HUDElement):
 
 fps_counter = FPSCounter()
 
-sun_texture = load_texture_on_file(file="assets/textures/sun_texture.png")
-planet_texture_1 = load_texture_on_file(file="assets/textures/earth_planet_texture.png")
-planet_texture_2 = load_texture_on_file(file="assets/textures/mars_planet_texture.png")
+game.update_loading_progress(0.2, "Loading assents (assets/textures/sun_texture_v2.png)")
+sun_texture = load_texture_on_file(file="assets/textures/sun_texture_v2.png")
+
+game.update_loading_progress(0.4, "Loading assents (assets/textures/earth_planet_texture_v2.png)")
+planet_texture_1 = load_texture_on_file(file="assets/textures/earth_planet_texture_v2.png")
+
+game.update_loading_progress(0.6, "Loading assents (assets/textures/mars_planet_texture_v2.png)")
+planet_texture_2 = load_texture_on_file(file="assets/textures/mars_planet_texture_v2.png")
 
 
+game.update_loading_progress(0.7, "Loading scene (lights)")
 light = Light(
     position=(0, 0, 0),
     color=(1.0, 1.0, 1.0),
@@ -66,6 +75,7 @@ light = Light(
 )
 game.add_light(light)
 
+game.update_loading_progress(0.8, "Loading scene (actor sun_actor)")
 sun_actor = Actor(
     position=(0, 0, 0),
     rotation=(0, 0, 0),
@@ -75,23 +85,25 @@ sun_actor = Actor(
 )
 game.add_game_object(sun_actor)
 
-small_planet = Actor(
+game.update_loading_progress(0.9, "Loading scene (actor earth_planet)")
+earth_planet = Actor(
     position=(0, 0, 16),
     rotation=(0, 0, 0),
     mesh=gen_sphere(radius=0.8, segments=256),
     texture=planet_texture_1,
     collision=True
 )
-game.add_game_object(small_planet)
+game.add_game_object(earth_planet)
 
-big_planet = Actor(
+game.update_loading_progress(0.9, "Loading scene (actor mars_planet)")
+mars_planet = Actor(
     position=(0, 0, 23),
     rotation=(0, 0, 0),
     mesh=gen_sphere(radius=1.6, segments=512),
     texture=planet_texture_2,
     collision=True
 )
-game.add_game_object(big_planet)
+game.add_game_object(mars_planet)
 
 orbit_radius = 16
 orbit_radius_2 = 23
@@ -113,10 +125,10 @@ def update_planet_orbit():
     angle_1 += simulation_speed / 90
     x = math.cos(angle_1) * orbit_radius
     z = math.sin(angle_1) * orbit_radius
-    small_planet.position = Vector3(x, 0, z)
+    earth_planet.position = Vector3(x, 0, z)
 
     rotation_angle_1 += simulation_speed
-    small_planet.rotation = Vector3(0, rotation_angle_1, 20)
+    earth_planet.rotation = Vector3(0, rotation_angle_1, 20)
 
     global angle_2
     global rotation_angle_2
@@ -124,15 +136,20 @@ def update_planet_orbit():
     angle_2 += simulation_speed / 270
     x = math.cos(angle_2) * orbit_radius_2
     z = math.sin(angle_2) * orbit_radius_2
-    big_planet.position = Vector3(x, 0, z)
+    mars_planet.position = Vector3(x, 0, z)
 
     rotation_angle_2 += simulation_speed
-    big_planet.rotation = Vector3(0, rotation_angle_2, 20)
+    mars_planet.rotation = Vector3(0, rotation_angle_2, 20)
 
+
+game.update_loading_progress(0.8, "Loading engine (registering update functions and hud's)")
 
 game.hud_component.add_element(fps_counter)
 
 game.add_update_function(func=update_fps_counter)
 game.add_update_function(func=update_planet_orbit)
+
+game.update_loading_progress(1.0, "Scene loaded")
+game.finish_loading()
 
 game.run()
