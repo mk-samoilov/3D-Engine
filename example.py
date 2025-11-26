@@ -52,9 +52,9 @@ class FPSCounter(HUDElement):
 
 fps_counter = FPSCounter()
 
-sun_texture = load_texture_on_file(file="exemple_textures/sun_texture.png")
-planet_texture_1 = load_texture_on_file(file="exemple_textures/planet_texture_1.png")
-planet_texture_2 = load_texture_on_file(file="exemple_textures/planet_texture_2.png")
+sun_texture = load_texture_on_file(file="assets/textures/sun_texture.png")
+planet_texture_1 = load_texture_on_file(file="assets/textures/earth_planet_texture.png")
+planet_texture_2 = load_texture_on_file(file="assets/textures/mars_planet_texture.png")
 
 
 light = Light(

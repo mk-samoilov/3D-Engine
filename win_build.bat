@@ -25,12 +25,22 @@ if exist "dist\build.exe" (
     copy dist\build.exe build\build.exe
     
     REM Copy data directories
-    if exist "exemple_textures" (
-        xcopy /E /I /Y exemple_textures build\exemple_textures
+    if exist "assets" (
+        xcopy /E /I /Y assets build\assets
     )
     if exist "engine3d\engine-icon.png" (
         if not exist "build\engine3d" mkdir build\engine3d
         copy engine3d\engine-icon.png build\engine3d\engine-icon.png
+    )
+
+    echo Cleaning up...
+
+    if exist "dist" (
+        rmdir /s /q dist
+    )
+
+    if exist "build\build_example" (
+        rmdir /s /q build\build_example
     )
     
     echo.
@@ -41,4 +51,3 @@ if exist "dist\build.exe" (
     echo ERROR: Build failed! Check the output above for errors.
     exit /b 1
 )
-

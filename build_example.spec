@@ -34,7 +34,7 @@ glfw_datas = collect_data_files('glfw', includes=['*.dll'])
 
 # Add other data files
 datas = [
-    ('exemple_textures', 'exemple_textures'),
+    ('assets', 'assets'),
     ('engine3d/engine-icon.png', 'engine3d'),
 ]
 
