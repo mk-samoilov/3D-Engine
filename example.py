@@ -167,7 +167,7 @@ game.update_loading_progress(0.7, "Loading scene (actor earth_planet)")
 earth_planet = Actor(
     position=(0, 0, 16),
     rotation=(0, 0, 0),
-    mesh=gen_sphere(radius=0.8, segments=224),
+    mesh=gen_sphere(radius=0.8, segments=256),
     texture=earth_texture,
     collision=True
 )
@@ -177,7 +177,7 @@ game.update_loading_progress(0.8, "Loading scene (actor mars_planet)")
 mars_planet = Actor(
     position=(0, 0, 23),
     rotation=(0, 0, 0),
-    mesh=gen_sphere(radius=1.6, segments=224),
+    mesh=gen_sphere(radius=1.6, segments=256),
     texture=mars_texture,
     collision=True
 )
