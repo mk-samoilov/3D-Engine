@@ -173,10 +173,9 @@ class Engine3D:
         texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, texture)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, bytes([0, 255, 255]))
-        
-        # Начальное отображение загрузочного экрана
-        self.loading_screen.set_progress(0.0)
-        self.loading_screen.set_status("Инициализация...")
+
+        self.loading_screen.set_progress(0.01)
+        self.loading_screen.set_status("Initializing...")
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         imgui.new_frame()
         self.loading_screen.render(window_width=width, window_height=height)
@@ -290,8 +289,7 @@ class Engine3D:
 
             imgui.new_frame()
             self.draw_ui()
-            
-            # Рендер загрузочного экрана поверх всего
+
             width, height = glfw.get_window_size(self.window)
             if self.loading_screen.visible:
                 self.loading_screen.render(window_width=width, window_height=height)
@@ -315,17 +313,10 @@ class Engine3D:
     def draw_ui(self):
         pass
     
-    def update_loading_progress(self, progress: float, status: str = "Загрузка..."):
-        """Обновить прогресс загрузки
-        
-        Args:
-            progress: Прогресс от 0.0 до 1.0
-            status: Текст статуса загрузки
-        """
+    def update_loading_progress(self, progress: float, status: str = "Loading..."):
         self.loading_screen.set_progress(progress)
         self.loading_screen.set_status(status)
-        
-        # Обновить окно для отображения прогресса
+
         glfw.poll_events()
         self.impl.process_inputs()
         
@@ -340,7 +331,6 @@ class Engine3D:
         glfw.swap_buffers(self.window)
     
     def finish_loading(self):
-        """Завершить загрузку и скрыть загрузочный экран"""
         self.loading_screen.hide()
 
     def cleanup(self):
