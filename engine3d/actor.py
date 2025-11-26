@@ -5,6 +5,7 @@ from OpenGL.GL import *
 
 from .methods import gen_base_texture
 
+
 class Actor:
     def __init__(self, position, rotation, mesh, texture, collision: bool, physic: bool = False, mass: float = 1.0, restitution: float = 0.5):
         self.position = Vector3(position)

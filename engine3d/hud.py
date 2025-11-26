@@ -23,12 +23,14 @@ class HUDComponent:
     def toggle_visibility(self):
         self.visible = not self.visible
 
+
 class BaseHUDElement:
     def __init__(self):
         self.visible = True
 
     def render(self, window_width, window_height):
         pass
+
 
 class HUDElement(BaseHUDElement):
     def __init__(self, position: tuple = (10, 10), size: tuple = (300, 200), callback=None):

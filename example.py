@@ -6,10 +6,13 @@ from pygame import Vector3
 import math
 import imgui
 
+
 player = Camera((5, 5, 40), collision=True)
 game = Engine3D(player=player)
 
+
 import glfw
+
 
 class FPSCounter(HUDElement):
     def __init__(self):
@@ -40,11 +43,13 @@ class FPSCounter(HUDElement):
             imgui.text(f"FPS: {self.fps}")
             imgui.end()
 
+
 fps_counter = FPSCounter()
 
 sun_texture = load_texture_on_file(file="exemple_textures/sun_texture.png")
 planet_texture_1 = load_texture_on_file(file="exemple_textures/planet_texture_1.png")
 planet_texture_2 = load_texture_on_file(file="exemple_textures/planet_texture_2.png")
+
 
 light = Light(
     position=(0, 0, 0),

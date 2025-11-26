@@ -2,6 +2,7 @@ import math
 
 from .classes import Mesh
 
+
 def gen_cube(width: float, height: float, depth: float) -> Mesh:
     w = float(width) * 2
     h = float(height) * 2
@@ -31,6 +32,7 @@ def gen_cube(width: float, height: float, depth: float) -> Mesh:
     ]
 
     return Mesh(vertices=vertices, faces=faces, uvs=uvs)
+
 
 def gen_sphere(radius: float, segments: int = 16) -> Mesh:
     vertices = []

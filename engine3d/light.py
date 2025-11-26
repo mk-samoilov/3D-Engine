@@ -2,6 +2,7 @@ from pygame.math import Vector3
 
 from OpenGL.GL import *
 
+
 class Light:
     def __init__(self, position: tuple, color: tuple = (1.0, 1.0, 1.0), ambient: float = 0.2, diffuse: float = 0.8, specular: float = 1.0):
         self.position = Vector3(position)

@@ -6,6 +6,7 @@ from OpenGL.GLU import *
 
 from engine3d.actor import Actor
 
+
 class Camera:
     def __init__(self, position: Tuple, collision: bool, camera_move_speed: float = 1):
         self.position = Vector3(position)

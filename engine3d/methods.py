@@ -5,6 +5,7 @@ from OpenGL.GL import *
 
 from .classes import Mesh
 
+
 def load_mesh_on_file(file: str):
     with open(file=f"{str(file)}", mode="r") as file:
         mesh_data = json.load(fp=file)
@@ -13,6 +14,7 @@ def load_mesh_on_file(file: str):
         )
 
     return mesh
+
 
 def load_texture_on_file(file: str):
     image = Image.open(file)
@@ -27,6 +29,7 @@ def load_texture_on_file(file: str):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
     return texture_id
+
 
 def gen_base_texture():
     texture_id = glGenTextures(1)
