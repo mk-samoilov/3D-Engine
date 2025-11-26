@@ -16,7 +16,7 @@ import glfw
 
 class FPSCounter(HUDElement):
     def __init__(self):
-        super().__init__()
+        super().__init__(position=(0, 0), size=(80, 40))
 
         self.fps = 0
         self.frame_count = 0
@@ -33,8 +33,14 @@ class FPSCounter(HUDElement):
             self.frame_count = 0
             self.last_time = current_time
 
-    def render(self, *args):
-        imgui.set_next_window_position(*self.position)
+    def render(self, window_width, window_height):
+        if not self.visible:
+            return
+
+        x = window_width - self.size[0]
+        y = 10
+        imgui.set_next_window_position(x, y)
+
         if self.visible:
             imgui.begin(
                 "FPS",

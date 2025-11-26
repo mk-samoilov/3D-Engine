@@ -162,8 +162,11 @@ class Engine3D:
         self.last_time = glfw.get_time()
         self.last_mouse_x = width / 2
         self.last_mouse_y = height / 2
-        self.mouse_locked = False
-        glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_NORMAL)
+
+        self.mouse_locked = True
+        self.last_rmb_state = glfw.RELEASE
+        glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_DISABLED)
+        glfw.set_cursor_pos(self.window, self.last_mouse_x, self.last_mouse_y)
 
         texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, texture)
@@ -184,13 +187,15 @@ class Engine3D:
         return window
 
     def handle_inputs(self):
-        if glfw.get_mouse_button(self.window, glfw.MOUSE_BUTTON_RIGHT) == glfw.PRESS and not self.mouse_locked:
-            self.mouse_locked = True
-            glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_DISABLED)
-            glfw.set_cursor_pos(self.window, self.last_mouse_x, self.last_mouse_y)
-        elif glfw.get_mouse_button(self.window, glfw.MOUSE_BUTTON_RIGHT) == glfw.RELEASE and self.mouse_locked:
-            self.mouse_locked = False
-            glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_NORMAL)
+        current_rmb_state = glfw.get_mouse_button(self.window, glfw.MOUSE_BUTTON_RIGHT)
+        if current_rmb_state == glfw.PRESS and self.last_rmb_state == glfw.RELEASE:
+            self.mouse_locked = not self.mouse_locked
+            if self.mouse_locked:
+                glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_DISABLED)
+                glfw.set_cursor_pos(self.window, self.last_mouse_x, self.last_mouse_y)
+            else:
+                glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_NORMAL)
+        self.last_rmb_state = current_rmb_state
 
         if self.mouse_locked:
             x_, y = glfw.get_cursor_pos(self.window)
