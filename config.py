@@ -1,7 +1,7 @@
 WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
 WINDOW_TITLE = "MKE3D Example"
-WINDOW_ICON = "./engine3d/engine-icon.png"
+WINDOW_ICON = "assets/icon/app_icon.png"
 
 DRAW_DISTANCE = 1000
 MSAA_X = 8

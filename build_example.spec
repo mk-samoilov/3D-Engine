@@ -35,7 +35,6 @@ glfw_datas = collect_data_files('glfw', includes=['*.dll'])
 # Add other data files
 datas = [
     ('assets', 'assets'),
-    ('engine3d/engine-icon.png', 'engine3d'),
 ]
 
 # If glfw_datas has entries, add them
@@ -88,11 +87,11 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='engine3d/engine-icon.png' if os.path.exists('engine3d/engine-icon.png') else None,
+    icon='assets/icon/app_icon.png' if os.path.exists('assets/icon/app_icon.png') else None,
 )

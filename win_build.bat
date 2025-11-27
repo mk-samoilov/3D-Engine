@@ -28,10 +28,6 @@ if exist "dist\build.exe" (
     if exist "assets" (
         xcopy /E /I /Y assets build\assets
     )
-    if exist "engine3d\engine-icon.png" (
-        if not exist "build\engine3d" mkdir build\engine3d
-        copy engine3d\engine-icon.png build\engine3d\engine-icon.png
-    )
 
     echo Cleaning up...
 
