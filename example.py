@@ -133,13 +133,13 @@ class ControlWindow(HUDElement):
 
 control_window = ControlWindow(fps_counter, game)
 
-game.update_loading_progress(0.3, "Loading assents (assets/textures/sun_texture.png)")
+game.update_loading_progress(0.3, "Loading assets (assets/textures/sun_texture.png)")
 sun_texture = load_texture_on_file(file="assets/textures/sun_texture.png")
 
-game.update_loading_progress(0.4, "Loading assents (assets/textures/earth_planet_texture.png)")
+game.update_loading_progress(0.4, "Loading assets (assets/textures/earth_planet_texture.png)")
 earth_texture = load_texture_on_file(file="assets/textures/earth_planet_texture.png")
 
-game.update_loading_progress(0.4, "Loading assents (assets/textures/mars_planet_texture.png)")
+game.update_loading_progress(0.4, "Loading assets (assets/textures/mars_planet_texture.png)")
 mars_texture = load_texture_on_file(file="assets/textures/mars_planet_texture.png")
 
 
