@@ -15,7 +15,7 @@ if exist "dist" (
 
 REM Build using the spec file
 echo Running PyInstaller...
-pyinstaller build_example.spec --clean
+pyinstaller build_game.spec --clean
 
 REM Copy the executable to build directory
 if exist "dist\build.exe" (
@@ -35,8 +35,8 @@ if exist "dist\build.exe" (
         rmdir /s /q dist
     )
 
-    if exist "build\build_example" (
-        rmdir /s /q build\build_example
+    if exist "build\build_game" (
+        rmdir /s /q build\build_game
     )
     
     echo.

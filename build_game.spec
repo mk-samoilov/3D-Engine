@@ -42,7 +42,7 @@ if glfw_datas:
     datas.extend(glfw_datas)
 
 a = Analysis(
-    ['example.py'],
+    ['game.py'],
     pathex=[os.getcwd()],  # Include current directory so config.py can be found
     binaries=glfw_binaries,  # Include GLFW DLLs
     datas=datas,
