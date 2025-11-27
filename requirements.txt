@@ -7,4 +7,4 @@ imgui~=2.0.0
 glfw~=2.8.0
 
 # FOR BUILDING BINARY FILES:
-# pyinstaller~=6.12.0
+pyinstaller~=6.17.0
