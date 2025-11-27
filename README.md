@@ -1,4 +1,4 @@
 ## mk Engine3D
 
-### Simple 3d engine with support imgui hud's, textures, lights, etc
+### 3D engine with support imgui hud's and one-bat-script build for windows
 ### [documentation](doc_s2.md) for lasted engine version
