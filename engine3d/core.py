@@ -17,14 +17,14 @@ from .loading_screen import LoadingScreen
 
 
 class PhysicsEngine:
-    def __init__(self, gravity: Vector3 = Vector3(0, 0, 0)): # Vector3(0, -9.8, 0) - earth gravity
+    def __init__(self, gravity: Vector3 = Vector3(0, 0, 0)):  # Vector3(0, -9.8, 0) - earth gravity
         self.gravity = gravity
         self.objects = []
 
     def update(self, dt: float):
         for obj in self.objects:
             if obj.physic:
-                gravitational_force = self.gravity
+                gravitational_force = self.gravity * obj.mass
                 obj.apply_force(gravitational_force)
             obj.update(dt=float(dt))
 
@@ -222,9 +222,13 @@ class Engine3D:
             self.player.move(-self.player.front * self.player.camera_move_speed, self.game_objects)
 
         if glfw.get_key(self.window, glfw.KEY_A) == glfw.PRESS:
-            self.player.move(-Vector3.cross(self.player.front, self.player.up).normalize() * self.player.camera_move_speed, self.game_objects)
+            self.player.move(
+                -Vector3.cross(self.player.front, self.player.up).normalize() * self.player.camera_move_speed,
+                self.game_objects)
         if glfw.get_key(self.window, glfw.KEY_D) == glfw.PRESS:
-            self.player.move(Vector3.cross(self.player.front, self.player.up).normalize() * self.player.camera_move_speed, self.game_objects)
+            self.player.move(
+                Vector3.cross(self.player.front, self.player.up).normalize() * self.player.camera_move_speed,
+                self.game_objects)
 
     def add_game_object(self, obj: Actor):
         obj.__setup_vbo__()
@@ -288,9 +292,6 @@ class Engine3D:
             for func in self.custom_update_functions:
                 func()
 
-            current_time = glfw.get_time()
-            self.last_time = current_time
-
             self.handle_inputs()
             self.render_3d_scene()
 
@@ -300,7 +301,7 @@ class Engine3D:
             width, height = glfw.get_window_size(self.window)
             if self.loading_screen.visible:
                 self.loading_screen.render(window_width=width, window_height=height)
-            
+
             self.hud_component.render_all_hud(window_width=width, window_height=height)
 
             imgui.render()
@@ -319,24 +320,24 @@ class Engine3D:
 
     def draw_ui(self):
         pass
-    
+
     def update_loading_progress(self, progress: float, status: str = "Loading..."):
         self.loading_screen.set_progress(progress)
         self.loading_screen.set_status(status)
 
         glfw.poll_events()
         self.impl.process_inputs()
-        
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        
+
         imgui.new_frame()
         width, height = glfw.get_window_size(self.window)
         self.loading_screen.render(window_width=width, window_height=height)
-        
+
         imgui.render()
         self.impl.render(imgui.get_draw_data())
         glfw.swap_buffers(self.window)
-    
+
     def finish_loading(self):
         self.loading_screen.hide()
 

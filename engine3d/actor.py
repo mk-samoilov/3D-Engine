@@ -48,7 +48,7 @@ class Actor:
         normal_data = self.normals[faces_flat].flatten().astype(np.float32)
 
         uv_data = self.uvs.reshape(num_faces * num_vertices_per_face, 2).flatten().astype(np.float32)
-        
+
         index_data = np.arange(num_faces * num_vertices_per_face, dtype=np.uint32)
 
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
@@ -119,11 +119,11 @@ class Actor:
 
     def calculate_inertia_tensor(self):
         x_, y, z = self.vertices[:, 0], self.vertices[:, 1], self.vertices[:, 2]
-        
+
         inertia = np.zeros((3, 3))
-        inertia[0, 0] = np.sum(x_**2 + z**2)
-        inertia[1, 1] = np.sum(x_**2 + z**2)
-        inertia[2, 2] = np.sum(x_**2 + y**2)
+        inertia[0, 0] = np.sum(x_ ** 2 + z ** 2)
+        inertia[1, 1] = np.sum(x_ ** 2 + z ** 2)
+        inertia[2, 2] = np.sum(x_ ** 2 + y ** 2)
         inertia[0, 1] = -np.sum(x_ * y)
         inertia[0, 2] = -np.sum(x_ * z)
         inertia[1, 2] = -np.sum(y * z)
@@ -149,8 +149,6 @@ class Actor:
         self.angular_velocity += Vector3(*np.dot(self.inv_inertia_tensor, torque))
 
     def update(self, dt: float):
-        # F = ma, a = F/m
-
         dt = float(dt)
         self.vector = self.applied_force
 
@@ -165,7 +163,7 @@ class Actor:
         self.applied_force = Vector3(0, 0, 0)
 
     def rotate(self, angle: float, axis: Vector3):
-        quat = [axis.x * np.sin(angle/2), axis.y * np.sin(angle/2), axis.z * np.sin(angle/2), np.cos(angle/2)]
+        quat = [axis.x * np.sin(angle / 2), axis.y * np.sin(angle / 2), axis.z * np.sin(angle / 2), np.cos(angle / 2)]
         self.rotation = Vector3(*self.quaternion_multiply(quat, [*self.rotation, 0])[:3])
 
     @staticmethod
@@ -173,8 +171,8 @@ class Actor:
         w1, x1, y1, z1 = q1
         w2, x2, y2, z2 = q2
         return [
-            w1*w2 - x1*x2 - y1*y2 - z1*z2,
-            w1*x2 + x1*w2 + y1*z2 - z1*y2,
-            w1*y2 - x1*z2 + y1*w2 + z1*x2,
-            w1*z2 + x1*y2 - y1*x2 + z1*w2
+            w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+            w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+            w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,
+            w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
         ]
