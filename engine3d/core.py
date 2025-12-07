@@ -17,14 +17,14 @@ from .loading_screen import LoadingScreen
 
 
 class PhysicsEngine:
-    def __init__(self, gravity: Vector3 = Vector3(0, 0, 0)):  # Vector3(0, -9.8, 0) - earth gravity
-        self.gravity = gravity
+    def __init__(self, basic_gravity: Vector3 = Vector3(0, 0, 0)):  # Vector3(0, -9.8, 0) - earth gravity
+        self.basic_gravity = basic_gravity
         self.objects = []
 
     def update(self, dt: float):
         for obj in self.objects:
             if obj.physic:
-                gravitational_force = self.gravity * obj.mass
+                gravitational_force = self.basic_gravity * obj.mass
                 obj.apply_force(gravitational_force)
             obj.update(dt=float(dt))
 
